@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Scopely Dashboard</title>
+<style>
+:root{
+  --ground:#eef1f3; --surface:#fff; --ink:#2c3036; --muted:#79818a; --faint:#a7aeb5;
+  --hair:#e5e8eb; --hair2:#f2f4f6; --accent:#cf4b3b; --accent-ink:#fff; --header:#2b313a;
+  --header-ink:#fff; --link:#3e6fb0; --charcoal:#3a4046;
+  --ok:#33a15c; --ok-bg:#e7f4ec; --warn:#c77a16; --warn-bg:#faefdd; --crit:#d64b3f; --crit-bg:#fbe7e5;
+  --brief:#3e6fb0; --brief-bg:#e9f0fa;
+  --lqa:#e5942f; --lqa-bg:#fbeeda;
+  --mono:ui-monospace,"Cascadia Code",Consolas,monospace;
+  --sans:"Segoe UI Variable","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;}
+.topbar{background:var(--header);color:var(--header-ink);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px;box-shadow:0 2px 8px rgba(40,44,50,.18);position:relative;z-index:2;}
+.topbar .brand{font-weight:700;font-size:15px;letter-spacing:.11em;}
+.topbar .brand small{font-weight:500;opacity:.75;margin-left:8px;font-size:12px;letter-spacing:0;}
+.topbar .meta{font-size:12px;color:rgba(255,255,255,.72);display:flex;gap:14px;align-items:center;font-variant-numeric:tabular-nums;}
+.refresh-btn{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);color:#fff;
+  font-family:var(--sans);font-size:13px;font-weight:600;padding:7px 14px;border-radius:8px;cursor:pointer;transition:.12s;}
+.refresh-btn:hover{background:rgba(255,255,255,.24);}
+.refresh-btn:disabled{opacity:.6;cursor:progress;}
+.refresh-btn.spin{animation:none;}
+.refresh-btn .ico{display:inline-block;}
+.refresh-btn.busy .ico{animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.topsticky{position:sticky;top:0;z-index:10;background:var(--ground);}
+.topfixed{background:var(--ground);}
+.wrap{max-width:1760px;margin:0 auto;padding:0 28px 60px;}
+.wrap--head{padding:0 28px;}
+.tabs{display:flex;gap:4px;padding:14px 0 0;flex-wrap:wrap;}
+.tab{background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);padding:11px 15px;
+  font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;transition:color .12s,background .12s;}
+.tab:hover{color:var(--ink);background:rgba(43,49,58,.04);border-radius:8px 8px 0 0;}
+.tab.on{color:var(--accent);border-bottom-color:var(--accent);}
+.tab .badge{background:var(--hair);color:var(--muted);font-size:11px;font-weight:700;padding:1px 8px;border-radius:999px;font-family:var(--mono);}
+.tab.on .badge{background:var(--hair);color:var(--muted);}
+.panel{background:var(--surface);border:1px solid var(--hair);border-top:none;border-radius:0 0 12px 12px;box-shadow:0 10px 30px rgba(40,44,50,.07);}
+.panel__head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 20px;margin-top:14px;
+  background:var(--surface);border:1px solid var(--hair);border-radius:12px 12px 0 0;border-bottom:1px solid var(--hair);flex-wrap:wrap;}
+.panel__title{font-size:16px;font-weight:700;letter-spacing:-.01em;}
+.panel__title span{color:var(--faint);font-weight:500;font-size:13px;margin-left:10px;font-variant-numeric:tabular-nums;}
+table{width:100%;border-collapse:collapse;min-width:920px;}
+thead th{text-align:left;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);font-weight:700;
+  padding:12px 16px;border-bottom:1px solid var(--hair);white-space:nowrap;background:var(--surface);position:sticky;top:var(--topH,0);z-index:1;}
+thead th.sortable{cursor:pointer;user-select:none;}
+thead th.sortable:hover{color:var(--ink);}
+thead th .arr{color:var(--accent);font-size:9px;margin-left:3px;}
+tbody td{padding:8px 16px;line-height:1.3;border-bottom:1px solid var(--hair2);vertical-align:middle;}
+tbody tr{transition:background .1s;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:var(--hair2);}
+tbody tr.checked{opacity:.55;}
+tbody tr.checked .desc{text-decoration:line-through;}
+.tk{font-family:var(--sans);font-weight:600;color:var(--link);text-decoration:none;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.new-badge{display:inline-block;background:var(--accent);color:#fff;font-size:9px;font-weight:800;letter-spacing:.06em;
+  padding:1px 5px;border-radius:4px;margin-left:7px;vertical-align:middle;}
+tbody tr.isnew{background:rgba(207,75,59,.055);}
+tbody tr.isnew:hover{background:rgba(207,75,59,.1);}
+.tk:hover{text-decoration:underline;}
+.desc{color:var(--ink);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lang{font-family:var(--mono);font-size:12px;color:var(--muted);}
+td.langs{max-width:260px;font-family:var(--mono);font-size:11.5px;color:var(--muted);line-height:1.5;}
+.pill{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;}
+.pill.master{background:var(--ok-bg);color:var(--ok);}
+.pill.brief{background:var(--brief-bg);color:var(--brief);}
+.pill.lqa{background:var(--lqa-bg);color:var(--lqa);cursor:pointer;}
+.pill.lqa::before{content:"●";font-size:8px;margin-right:4px;vertical-align:1px;}
+.pill.lqa .x{margin-left:6px;opacity:.55;font-weight:700;}
+.pill.lqa:hover{filter:brightness(.96);}
+.pill.lqa:hover .x{opacity:1;}
+.chip-toggle{background:var(--surface);border:1.5px solid var(--lqa);color:var(--lqa);padding:8px 12px;border-radius:8px;
+  font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.chip-toggle:hover{border-color:var(--lqa);color:var(--ink);}
+.chip-toggle.on{background:rgba(229,148,47,.14);border-color:var(--lqa);color:var(--lqa);}
+.chip-toggle .n{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;
+  background:var(--lqa);color:#fff;font-family:var(--mono);font-size:10.5px;font-weight:700;margin-left:8px;}
+.chip-toggle.on .n{background:var(--lqa);}
+.mbadge{font-size:11px;font-weight:600;font-family:var(--mono);white-space:nowrap;}
+.mbadge.ok{color:var(--ok);} .mbadge.miss{color:var(--crit);} .mbadge.none{color:var(--faint);}
+.dl{white-space:nowrap;font-variant-numeric:tabular-nums;}
+.dl .rel{font-size:11px;font-weight:700;margin-left:7px;}
+.dl.overdue .rel{color:var(--crit);} .dl.soon .rel{color:var(--warn);} .dl.ok .rel{color:var(--ok);}
+.chk{width:18px;height:18px;cursor:pointer;accent-color:var(--ok);}
+.sheet-btn{background:var(--surface);border:1px solid var(--hair);color:var(--muted);font-family:var(--sans);
+  font-size:12px;font-weight:600;padding:5px 10px;border-radius:7px;cursor:pointer;white-space:nowrap;transition:.12s;}
+.sheet-btn:hover{border-color:var(--ok);color:var(--ok);}
+.sheet-btn:disabled{opacity:.5;cursor:progress;}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--charcoal);color:#fff;
+  padding:11px 18px;border-radius:10px;font-size:13px;box-shadow:0 8px 28px rgba(0,0,0,.28);z-index:100;
+  opacity:0;pointer-events:none;transition:opacity .2s;max-width:80vw;}
+.toast.show{opacity:1;pointer-events:auto;}
+.toast a{color:#9ec5ff;text-decoration:underline;margin-left:8px;}
+.center{text-align:center;}
+.empty{padding:44px;text-align:center;color:var(--faint);}
+.foot{color:var(--faint);font-size:12px;margin-top:14px;text-align:right;}
+.foot code{font-family:var(--mono);background:var(--hair);padding:1px 6px;border-radius:4px;}
+a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.sortable:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important;}}
+</style>
+</head><body>
+<div class="topsticky">
+<div class="topbar">
+  <div class="brand">SCOPELY DASHBOARD</div>
+  <div class="meta">
+    <span id="updated">—</span>
+    <button id="refresh" class="refresh-btn"><span class="ico">↻</span> Refresh</button>
+  </div>
+</div>
+<div class="topfixed">
+<div class="wrap wrap--head">
+  <div class="tabs" id="tabs"></div>
+  <div class="panel__head">
+    <div class="panel__title" id="paneltitle"></div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <button id="lqaFilter" class="chip-toggle">LQA ready<span class="n" id="lqaCount">0</span></button>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+<div class="wrap">
+  <div class="panel">
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th class="sortable" data-sort="isNew">Card</th>
+          <th>Description</th>
+          <th class="sortable" data-sort="language">Lang</th>
+          <th>Type</th>
+          <th>Master card</th>
+          <th class="sortable" data-sort="lqa">LQA</th>
+          <th class="center">Done</th>
+          <th class="center">Sheet</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="foot">snapshot · refresh with <code>node refresh.mjs</code></div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="data.js"></script>
+<script>
+(function(){
+  var cards = window.__DATA__ || [];
+  var DAY = 86400000;
+  var state = { tab:'all', sort:'due', dir:1, lqaOnly:false };
+
+  // "Done" is stored per card as the timestamp (ms) when it was checked, so a later
+  // LQA handoff can auto-clear it. { cardId: doneAtMs }
+  var DKEY = 'briefTracker.done';
+  var doneMap = {};
+  try { doneMap = JSON.parse(localStorage.getItem(DKEY) || '{}') || {}; } catch(e){ doneMap = {}; }
+  // migrate the old boolean set (briefTracker.checked) → timestamped map
+  var oldRaw = localStorage.getItem('briefTracker.checked');
+  if (oldRaw){
+    try { (JSON.parse(oldRaw)||[]).forEach(function(id){ if(!(id in doneMap)) doneMap[id]=Date.now(); }); } catch(e){}
+    localStorage.removeItem('briefTracker.checked');
+    localStorage.setItem(DKEY, JSON.stringify(doneMap));
+  }
+  function saveDone(){ localStorage.setItem(DKEY, JSON.stringify(doneMap)); }
+  // an LQA handoff comment dated after the card was marked done
+  function lqaAfterDone(c, ts){
+    return c.lqa && (c.lqaComments||[]).some(function(x){ return x.date && Date.parse(x.date) > ts; });
+  }
+  // clear Done on any card that got an LQA handoff after it was marked done
+  function reconcileDone(){
+    var changed=false;
+    cards.forEach(function(c){
+      if((c.id in doneMap) && lqaAfterDone(c, doneMap[c.id])){ delete doneMap[c.id]; changed=true; }
+    });
+    if(changed) saveDone();
+  }
+  function isDone(c){ return c.id in doneMap; }
+  function doneCount(){ return Object.keys(doneMap).length; }
+
+  // "LQA dismissed" — user can remove the LQA tag; stored as the timestamp when dismissed,
+  // so a later LQA handoff comment brings it back. { cardId: dismissedAtMs }
+  var LKEY = 'briefTracker.lqaDismissed';
+  var lqaDismiss = {};
+  try { lqaDismiss = JSON.parse(localStorage.getItem(LKEY) || '{}') || {}; } catch(e){ lqaDismiss = {}; }
+  function saveLqa(){ localStorage.setItem(LKEY, JSON.stringify(lqaDismiss)); }
+  // an LQA handoff comment dated after the tag was dismissed → bring it back
+  function reconcileLqa(){
+    var changed=false;
+    cards.forEach(function(c){
+      if((c.id in lqaDismiss) && lqaAfterDone(c, lqaDismiss[c.id])){ delete lqaDismiss[c.id]; changed=true; }
+    });
+    if(changed) saveLqa();
+  }
+  function lqaVisible(c){ return c.lqa && !(c.id in lqaDismiss); }
+  function lqaCount(){ return cards.filter(lqaVisible).length; }
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function daysUntil(due){ if(!due) return null; var d=new Date(due.length<=10?due+'T00:00:00':due); return Math.round((d-new Date())/DAY); }
+  function fmtDate(s){ if(!s) return '—'; return new Date(s).toLocaleDateString(undefined,{day:'2-digit',month:'short'}); }
+  function dueClass(due){ var n=daysUntil(due); if(n===null) return 'none'; if(n<0) return 'overdue'; if(n<=7) return 'soon'; return 'ok'; }
+  function ipOf(c){ return c.ticket.split('-')[0]; }
+
+  var ips = Array.from(new Set(cards.map(ipOf))).sort();
+  function tabBtn(id,label,count){ return '<button class="tab'+(state.tab===id?' on':'')+'" data-tab="'+esc(id)+'">'+esc(label)+' <span class="badge">'+count+'</span></button>'; }
+  function renderTabs(){
+    var html = tabBtn('all','All',cards.length);
+    ips.forEach(function(i){ html += tabBtn(i,i,cards.filter(function(c){return ipOf(c)===i;}).length); });
+    document.getElementById('tabs').innerHTML = html;
+  }
+
+  function passes(c){
+    if(state.tab!=='all' && ipOf(c)!==state.tab) return false;
+    if(state.lqaOnly && !lqaVisible(c)) return false;
+    return true;
+  }
+  function sortList(list){
+    var k=state.sort, d=state.dir;
+    return list.slice().sort(function(a,b){
+      var va=a[k], vb=b[k];
+      if(typeof va==='boolean'||typeof vb==='boolean'){ va=va?0:1; vb=vb?0:1; } // true sorts first
+      else { va=va||''; vb=vb||''; }
+      var r=(va<vb?-1:va>vb?1:0)*d;
+      if(r===0){ var ta=a.ticket||'', tb=b.ticket||''; r=(ta<tb?-1:ta>tb?1:0); } // tie-break by ticket
+      return r;
+    });
+  }
+
+  function rowHtml(c){
+    var master = c.masterRef==null ? '<span class="mbadge none">—</span>'
+      : (c.masterExists ? '<span class="mbadge ok">'+esc(c.masterRef)+' ✓</span>'
+                        : '<span class="mbadge miss">'+esc(c.masterRef)+' ✕ missing</span>');
+    var role = c.role==='master card'
+      ? '<span class="pill master">master</span>' : '<span class="pill brief">brief</span>';
+    var lqc = c.lqaComments&&c.lqaComments[0];
+    var lqa = lqaVisible(c)
+      ? '<span class="pill lqa" data-lqa-id="'+esc(c.id)+'" title="'+esc((lqc?lqc.author+' · '+fmtDate(lqc.date)+' · ':'')+(lqc?lqc.text:''))+' — click ✕ to dismiss">LQA<span class="x">✕</span></span>'
+      : '<span class="mbadge none">—</span>';
+    var langs = (c.languages&&c.languages.length) ? c.languages : (c.language?[c.language]:[]);
+    var langCell = langs.length ? esc(langs.join(', ')) : '—';
+    var isc = isDone(c);
+    var cls = ((isc?'checked ':'')+(c.isNew?'isnew':'')).trim();
+    return '<tr class="'+cls+'">'
+      + '<td><a class="tk" href="'+esc(c.permalink)+'" target="_blank" rel="noreferrer">'+esc(c.ticket)+'</a>'+(c.isNew?'<span class="new-badge">NEW</span>':'')+'</td>'
+      + '<td class="desc" title="'+esc(c.title)+'">'+esc(c.title)+'</td>'
+      + '<td class="langs" title="'+esc(langs.join(', '))+'">'+langCell+'</td>'
+      + '<td>'+role+'</td>'
+      + '<td>'+master+'</td>'
+      + '<td>'+lqa+'</td>'
+      + '<td class="center"><input class="chk" type="checkbox" data-id="'+esc(c.id)+'"'+(isc?' checked':'')+'/></td>'
+      + '<td class="center"><button class="sheet-btn" data-sheet="'+esc(c.id)+'">→ Sheet</button></td>'
+      + '</tr>';
+  }
+  function updateTitle(shown){
+    document.getElementById('paneltitle').innerHTML =
+      (state.tab==='all'?'All cards':esc(state.tab)) + '<span>'+shown+' shown · '+doneCount()+' done</span>';
+  }
+  function render(){
+    var list = sortList(cards.filter(passes));
+    updateTitle(list.length);
+    document.getElementById('rows').innerHTML = list.length
+      ? list.map(rowHtml).join('')
+      : '<tr><td colspan="8" class="empty">No cards match.</td></tr>';
+    Array.prototype.forEach.call(document.querySelectorAll('th.sortable'), function(th){
+      var k=th.getAttribute('data-sort');
+      var label = k==='isNew'?'Card':k==='language'?'Lang':k==='lqa'?'LQA':k;
+      th.innerHTML = label + (state.sort===k ? ' <span class="arr">'+(state.dir>0?'▲':'▼')+'</span>' : '');
+    });
+    document.getElementById('lqaCount').textContent = lqaCount();
+  }
+
+  document.getElementById('tabs').addEventListener('click', function(e){
+    var b=e.target.closest('.tab'); if(!b) return;
+    state.tab=b.getAttribute('data-tab'); renderTabs(); render();
+  });
+  document.getElementById('lqaFilter').addEventListener('click', function(){
+    state.lqaOnly=!state.lqaOnly; this.classList.toggle('on', state.lqaOnly); render();
+  });
+  // click the LQA pill's ✕ (or the pill) to dismiss it; remembered until a newer LQA comment
+  document.getElementById('rows').addEventListener('click', function(e){
+    var p=e.target.closest('.pill.lqa[data-lqa-id]'); if(!p) return;
+    lqaDismiss[p.getAttribute('data-lqa-id')]=Date.now(); saveLqa(); render();
+  });
+
+  // ---- "→ Sheet": push a card to its Google Sheet via the Apps Script web app ----
+  var SHEET_URL_KEY='briefTracker.sheetUrl';
+  var SHEET_META={
+    MPY:{name:'MPY-Linguini & Farming', url:'https://docs.google.com/spreadsheets/d/1YMqUI3ZUIMK4W0gpSvnBOTkCyxE4W3lnul80bx_FFss/edit'},
+    PF: {name:'Pixel Flow translations', url:'https://docs.google.com/spreadsheets/d/1D-OdC4TeqX-nECnwAgYv_RlrCXtX2euayuPrJzmbYog/edit'}
+  };
+  function toast(html, ms){
+    var t=document.getElementById('toast'); t.innerHTML=html; t.classList.add('show');
+    clearTimeout(toast._t); toast._t=setTimeout(function(){ t.classList.remove('show'); }, ms||6000);
+  }
+  document.getElementById('rows').addEventListener('click', function(e){
+    var b=e.target.closest('.sheet-btn'); if(!b) return;
+    var id=b.getAttribute('data-sheet');
+    var c=cards.filter(function(x){return x.id===id;})[0]; if(!c) return;
+    var ip=c.ticket.split('-')[0];
+    if(!SHEET_META[ip]){ toast('No spreadsheet is set up for <b>'+esc(ip)+'</b> tasks yet.'); return; }
+    var url=localStorage.getItem(SHEET_URL_KEY);
+    if(!url){
+      url=prompt('One-time: paste your Apps Script web-app URL\n(Deploy the sheets-connector.gs script, then paste the /exec URL here):','');
+      if(!url) return; url=url.trim(); localStorage.setItem(SHEET_URL_KEY, url);
+    }
+    var payload={ ip:ip, tab:c.ticket, projectName:c.title, langCodes:c.languages||[], strings:c.strings||[] };
+    b.disabled=true;
+    fetch(url, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload)})
+      .then(function(){
+        var warn=(!c.strings||!c.strings.length)?' — no Original content found, fill it in':'';
+        toast('Sent <b>'+esc(c.ticket)+'</b> → '+esc(SHEET_META[ip].name)+warn+
+              '. <a href="'+SHEET_META[ip].url+'" target="_blank" rel="noreferrer">open sheet</a>');
+      })
+      .catch(function(err){ toast('Send failed: '+esc(String(err&&err.message||err))); })
+      .then(function(){ b.disabled=false; });
+  });
+  document.querySelector('thead').addEventListener('click', function(e){
+    var th=e.target.closest('th.sortable'); if(!th) return;
+    var k=th.getAttribute('data-sort');
+    if(state.sort===k) state.dir=-state.dir; else { state.sort=k; state.dir=1; }
+    render();
+  });
+  document.getElementById('rows').addEventListener('change', function(e){
+    var box=e.target.closest('.chk'); if(!box) return;
+    var id=box.getAttribute('data-id');
+    if(box.checked) doneMap[id]=Date.now(); else delete doneMap[id];
+    saveDone();
+    box.closest('tr').classList.toggle('checked', box.checked);
+    updateTitle(cards.filter(passes).length);
+  });
+
+  // ---- "Updated" time + Refresh button ----
+  var meta = window.__META__ || {};
+  var upd = document.getElementById('updated');
+  if (meta.generatedAt) {
+    var g = new Date(meta.generatedAt);
+    upd.textContent = 'Updated ' + g.toLocaleString(undefined,{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+  } else {
+    upd.textContent = 'snapshot';
+  }
+
+  var btn = document.getElementById('refresh');
+  var served = location.protocol === 'http:' || location.protocol === 'https:';
+  btn.addEventListener('click', function(){
+    if (!served) {
+      // opened as a file — no server to reach. Re-run the fetch offline, then reload.
+      upd.textContent = 'run "node server.mjs" for live refresh — reloading…';
+      setTimeout(function(){ location.reload(); }, 900);
+      return;
+    }
+    btn.disabled = true; btn.classList.add('busy');
+    var prev = upd.textContent; upd.textContent = 'Refreshing from Wrike…';
+    fetch('/api/refresh')
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        if (!res.ok) throw new Error(res.error || 'refresh failed');
+        upd.textContent = 'Updated — ' + res.count + ' cards';
+        location.reload(); // pick up the freshly written data.js
+      })
+      .catch(function(err){
+        btn.disabled = false; btn.classList.remove('busy');
+        upd.textContent = 'Refresh failed: ' + err.message;
+      });
+  });
+
+  // keep the sticky column headers docked right below the pinned top block
+  function setTopOffset(){
+    var el=document.querySelector('.topsticky');
+    if(el) document.documentElement.style.setProperty('--topH', el.offsetHeight+'px');
+  }
+  window.addEventListener('resize', setTopOffset);
+
+  reconcileDone();  // clear Done on cards that got an LQA handoff after being marked done
+  reconcileLqa();   // bring back dismissed LQA tags if a newer LQA handoff arrived
+  renderTabs();
+  render();
+  setTopOffset();
+})();
+</script>
+</body></html>

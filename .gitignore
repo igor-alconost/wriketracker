@@ -1,0 +1,13 @@
+# Never commit secrets
+wrike.env
+.env
+.env.*
+token.txt
+
+# Node
+node_modules/
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,15 +1,57 @@
 window.__DATA__ = [
   {
+    "id": "MAAAAAEL-q8U",
+    "ticket": "MPY-62684",
+    "title": "MPY-62684_Linguini Standard End Card_localization_AR_Album 22 - Farming - Loc Collaboration",
+    "language": "AR",
+    "languages": [
+      "AR"
+    ],
+    "strings": [],
+    "status": "Active",
+    "permalink": "https://www.wrike.com/open.htm?id=4495945492",
+    "due": "2026-07-08T17:00:00",
+    "role": "master card",
+    "masterRef": "MPY-59386",
+    "masterExists": true,
+    "projectName": "MPY-62684_Linguini Standard End Card_localization_AR_Album 22 - Farming",
+    "urgency": "HIGH",
+    "deliverables": "3",
+    "deliveryMonth": "July-26",
+    "vendor": "Alconost",
+    "taggedAlpha": true,
+    "lqa": false,
+    "isNew": false,
+    "tagComments": [
+      {
+        "author": "Angella Keushgerian",
+        "date": "2026-07-27T12:48:06Z",
+        "text": "@Nikita Leonenko @Alpha Alconost aah I see! Okay, would you like to keep the original then? If it&#39;s acceptable in both, then it&#39;s really up to you!"
+      },
+      {
+        "author": "Maia Soboleosky",
+        "date": "2026-07-27T12:47:25Z",
+        "text": "To make things faster, lets have v3 approved, which is the one in Aprimo. For me it is ok to go with creative versions but a date doesn&#39;t seem to need much creativity :) Thank you for double and triple checking! cc: @Nikita Leonenko @An"
+      },
+      {
+        "author": "Nikita Leonenko",
+        "date": "2026-07-27T12:38:58Z",
+        "text": "@Angella Keushgerian @Maia Soboleosky sharing this feedback from @Alpha Alconost as it might not be visible for everyone"
+      }
+    ],
+    "lqaComments": []
+  },
+  {
     "id": "MAAAAAEL-SIU",
     "ticket": "MPY-59379",
     "title": "MPY-59379_Farming_Season Retargeting End Card - Loc Collaboration",
-    "language": "EN-AU",
+    "language": "DE",
     "languages": [
-      "EN-AU",
-      "IT",
-      "FR-FR",
       "DE",
-      "ES-ES"
+      "FR-FR",
+      "EN-AU",
+      "ES-ES",
+      "IT"
     ],
     "strings": [],
     "status": "Active",
@@ -28,45 +70,9 @@ window.__DATA__ = [
     "isNew": false,
     "tagComments": [
       {
-        "author": "Nikita Leonenko",
-        "date": "2026-07-10T12:11:34Z",
-        "text": "Hi @Alpha Alconost here is the task for tasnslation, the reference in the attachment! Originanal Master project code is MPY-59379"
-      }
-    ],
-    "lqaComments": []
-  },
-  {
-    "id": "MAAAAAEL-ScS",
-    "ticket": "MPY-59380",
-    "title": "MPY-59380_Linguini Retargeting End Card - Loc Collaboration",
-    "language": "FR-FR",
-    "languages": [
-      "FR-FR",
-      "ES-ES",
-      "EN-AU",
-      "IT",
-      "DE"
-    ],
-    "strings": [],
-    "status": "Active",
-    "permalink": "https://www.wrike.com/open.htm?id=4495845138",
-    "due": "2026-07-10T17:00:00",
-    "role": "master card",
-    "masterRef": "MPY-59386",
-    "masterExists": true,
-    "projectName": "MPY-59380_Linguini Retargeting End Card",
-    "urgency": "Fixed",
-    "deliverables": "3",
-    "deliveryMonth": "July-26",
-    "vendor": "Alconost",
-    "taggedAlpha": true,
-    "lqa": false,
-    "isNew": false,
-    "tagComments": [
-      {
-        "author": "Nikita Leonenko",
-        "date": "2026-07-09T13:50:26Z",
-        "text": "Hi @Alpha Alconost there is no visual reference for translations but here are the lines YOUR DAFFY SHIELD AWAITS Comeback Now (it is button text) Welcome back, Doc! Original master project field value - 59380"
+        "author": "Keti Tavartkiladze",
+        "date": "2026-07-23T10:53:12Z",
+        "text": "Hi @Alpha Alconost @Nikita Leonenko are we expecting the loc ones for this ticket today?"
       }
     ],
     "lqaComments": []
@@ -75,20 +81,20 @@ window.__DATA__ = [
     "id": "MAAAAAEL-V1X",
     "ticket": "MPY-59386",
     "title": "MPY-59386_Linguini Standard End Card - Loc Collaboration",
-    "language": "FR-FR",
+    "language": "ES-ES",
     "languages": [
+      "ES-ES",
+      "AR",
+      "EN-AU",
+      "IT",
       "FR-FR",
       "CHT",
+      "PT-PT",
       "PL",
       "KO",
-      "PT-PT",
-      "AR",
-      "ES-ES",
-      "EN-AU",
-      "NL",
-      "IT",
-      "DE",
       "TR",
+      "NL",
+      "DE",
       "JP"
     ],
     "strings": [],
@@ -104,18 +110,60 @@ window.__DATA__ = [
     "deliveryMonth": "July-26",
     "vendor": "Alconost",
     "taggedAlpha": true,
+    "lqa": true,
+    "isNew": false,
+    "tagComments": [
+      {
+        "author": "Keti Tavartkiladze",
+        "date": "2026-07-24T08:31:24Z",
+        "text": "Hi @Nikita Leonenko @Alpha Alconost please let me know if we expect these loc tickets today as soon as possible, please, thank you cc @Maia Soboleosky"
+      },
+      {
+        "author": "Nikita Leonenko",
+        "date": "2026-07-22T11:37:45Z",
+        "text": "Hi @Alpha Alconost the videos are ready for LQA https://drive.google.com/drive/folders/1CJHOZwRioyMTngfkx1SPszLjwyz6t4Mn?usp&#61;sharing"
+      }
+    ],
+    "lqaComments": [
+      {
+        "author": "Nikita Leonenko",
+        "date": "2026-07-22T11:37:45Z",
+        "text": "Hi @Alpha Alconost the videos are ready for LQA https://drive.google.com/drive/folders/1CJHOZwRioyMTngfkx1SPszLjwyz6t4Mn?usp&#61;sharing"
+      }
+    ]
+  },
+  {
+    "id": "MAAAAAEL-X5_",
+    "ticket": "MPY-59395",
+    "title": "MPY-59395_Linguini_Retargeting_Trailer - Loc Collaboration",
+    "language": "ES-ES",
+    "languages": [
+      "ES-ES",
+      "EN-AU",
+      "FR-FR",
+      "IT",
+      "DE"
+    ],
+    "strings": [],
+    "status": "Active",
+    "permalink": "https://www.wrike.com/open.htm?id=4495867519",
+    "due": "2026-07-10T17:00:00",
+    "role": "master card",
+    "masterRef": "MPY-59336",
+    "masterExists": true,
+    "projectName": "MPY-59395_Linguini_Retargeting_Trailer",
+    "urgency": "Fixed",
+    "deliverables": "3",
+    "deliveryMonth": "July-26",
+    "vendor": "Alconost",
+    "taggedAlpha": true,
     "lqa": false,
     "isNew": false,
     "tagComments": [
       {
         "author": "Maia Soboleosky",
-        "date": "2026-07-20T09:24:44Z",
-        "text": "Hi @Nikita Leonenko @Alpha Alconost Attached the updated localization source file. After the endcard is approved, we&#39;ll provide textless renders to add to this source. This should be today but this way you can start editng the AE files."
-      },
-      {
-        "author": "Nikita Leonenko",
-        "date": "2026-07-17T10:11:38Z",
-        "text": "@Maia Soboleosky got that, thank you! @Alpha Alconost could you please take care of that?"
+        "date": "2026-07-24T10:25:57Z",
+        "text": "Hi @Nikita Leonenko @Alpha Alconost MKT just asked to change the TOS to: Jump Back In! The Board Just Got Loonier Please update the transaltions."
       }
     ],
     "lqaComments": []
@@ -127,20 +175,22 @@ window.__DATA__ = [
     "language": "JP",
     "languages": [
       "JP",
-      "IT",
-      "ES-ES",
       "FR-FR",
-      "PL",
       "NL",
-      "EN-AU",
-      "AR",
       "PT-PT",
+      "AR",
+      "PL",
       "KO",
-      "TR",
       "CHT",
+      "TR",
+      "ES-ES",
+      "IT",
+      "EN-AU",
       "DE"
     ],
-    "strings": [],
+    "strings": [
+      "Sound on (ref)"
+    ],
     "status": "Active",
     "permalink": "https://www.wrike.com/open.htm?id=4498321150",
     "due": "2026-07-13T17:00:00",
@@ -153,13 +203,96 @@ window.__DATA__ = [
     "deliveryMonth": "July-26",
     "vendor": "Alconost",
     "taggedAlpha": true,
-    "lqa": false,
+    "lqa": true,
     "isNew": false,
     "tagComments": [
       {
         "author": "Nikita Leonenko",
-        "date": "2026-07-09T13:42:48Z",
-        "text": "Hi @Alpha Alconost here is new task, here we need to transcribe VO text and translate it to Turkish - TR Arabic - AR Dutch - NL Spanish - ES-ES Korean - KO Polish - PL Portuguese - PT-PT English - EN-AU Italian - IT French - FR-FR Chinese T"
+        "date": "2026-07-27T13:44:48Z",
+        "text": "Hi @Alpha Alconost https://drive.google.com/drive/folders/1OnvKnRJw-A3gsQwoH9kMomObgFsEFvT3 this is ready for LQA"
+      },
+      {
+        "author": "Maia Soboleosky",
+        "date": "2026-07-24T10:59:19Z",
+        "text": "Hi @Alpha Alconost your assumpiton is correct, the message is to inform the viewer that the video has music, sound and VO, so the message is asking them to turn the audio on. cc: @Nikita Leonenko"
+      },
+      {
+        "author": "Keti Tavartkiladze",
+        "date": "2026-07-24T08:44:19Z",
+        "text": "Hi @Nikita Leonenko @Alpha Alconost how is this one going? When can we expect it, please?"
+      },
+      {
+        "author": "Maia Soboleosky",
+        "date": "2026-07-23T15:07:25Z",
+        "text": "Hi @Nikita Leonenko @Alpha Alconost we found out that the AE files on Drive I shared yesterday are split into Folders. You can use the PR uploaded to arpimo if this helsp https://scopely.dam.aprimo.com/dam/contentitems/c86f68014574413891efb"
+      },
+      {
+        "author": "Nikita Leonenko",
+        "date": "2026-07-22T16:36:31Z",
+        "text": "@Alpha Alconost meanwhile could you please add the line to the translation Sound on ( ref )"
+      }
+    ],
+    "lqaComments": [
+      {
+        "author": "Nikita Leonenko",
+        "date": "2026-07-27T13:44:48Z",
+        "text": "Hi @Alpha Alconost https://drive.google.com/drive/folders/1OnvKnRJw-A3gsQwoH9kMomObgFsEFvT3 this is ready for LQA"
+      }
+    ]
+  },
+  {
+    "id": "MAAAAAELZ95t",
+    "ticket": "MPY-59405",
+    "title": "MPY-59405_Linguini_Key Art UA Repurpose - Loc Collaboration",
+    "language": "JP",
+    "languages": [
+      "JP",
+      "DE",
+      "CHT",
+      "NL",
+      "PL",
+      "TR",
+      "AR",
+      "KO",
+      "IT",
+      "EN-AU",
+      "ES-ES",
+      "FR-FR",
+      "PT-PT"
+    ],
+    "strings": [
+      "The board just got loonier",
+      "Play now"
+    ],
+    "status": "Active",
+    "permalink": "https://www.wrike.com/open.htm?id=4486323821",
+    "due": "2026-07-15T17:00:00",
+    "role": "master card",
+    "masterRef": "MPY-59385",
+    "masterExists": false,
+    "projectName": "MPY-59405_Linguini_Key Art UA Repurpose",
+    "urgency": "Fixed",
+    "deliverables": "4",
+    "deliveryMonth": "July-26",
+    "vendor": "Alconost",
+    "taggedAlpha": true,
+    "lqa": false,
+    "isNew": false,
+    "tagComments": [
+      {
+        "author": "Keti Tavartkiladze",
+        "date": "2026-07-27T12:42:39Z",
+        "text": "Hi @Nikita Leonenko @Alpha Alconost are we expecting this today? Thank you"
+      },
+      {
+        "author": "Maia Soboleosky",
+        "date": "2026-07-27T10:09:36Z",
+        "text": "Source files are in Aprimo @Alpha Alconost @Nikita Leonenko"
+      },
+      {
+        "author": "Nikita Leonenko",
+        "date": "2026-07-23T13:47:43Z",
+        "text": "Hi @Alpha Alconost here are the lines for translation The board just got loonier Play now The reference in the attachment, please also add VE"
       }
     ],
     "lqaComments": []
@@ -189,18 +322,82 @@ window.__DATA__ = [
     "deliveryMonth": "July-26",
     "vendor": "Alconost",
     "taggedAlpha": true,
+    "lqa": true,
+    "isNew": false,
+    "tagComments": [
+      {
+        "author": "Nikita Leonenko",
+        "date": "2026-07-27T12:33:18Z",
+        "text": "Hi @Alpha Alconost please take care of the translation"
+      },
+      {
+        "author": "Maia Soboleosky",
+        "date": "2026-07-27T07:24:56Z",
+        "text": "Hi @Nikita Leonenko @Alpha Alconost MKT decided to add more Daffy VO lines on Friday. These are &#34;I&#39;m unstoppable!&#34; &#34;Look out below!&#34; Please transalte them for the subtitles on the loc version. I attached the most updated"
+      },
+      {
+        "author": "Nikita Leonenko",
+        "date": "2026-07-23T18:20:55Z",
+        "text": "Hi @Maia Soboleosky thank you! @Alpha Alconost these tickets are back, could you please udpdate the VE value back to transl &#43; LQA and check whether translation needs to be updated?"
+      }
+    ],
+    "lqaComments": [
+      {
+        "author": "Nikita Leonenko",
+        "date": "2026-07-23T18:20:55Z",
+        "text": "Hi @Maia Soboleosky thank you! @Alpha Alconost these tickets are back, could you please udpdate the VE value back to transl &#43; LQA and check whether translation needs to be updated?"
+      }
+    ]
+  },
+  {
+    "id": "MAAAAAEL-dgH",
+    "ticket": "MPY-59445",
+    "title": "MPY-59445_Linguini_Retargeting_Never Ending Bag - Loc Collaboration",
+    "language": "DE",
+    "languages": [
+      "DE",
+      "FR-FR",
+      "ES-ES"
+    ],
+    "strings": [
+      "TIME TO JUMP BACK IN",
+      "LOONEY TUNES HAVE TAKEN OVER",
+      "DON'T MISS EXCLUSIVE REWARDS"
+    ],
+    "status": "Active",
+    "permalink": "https://www.wrike.com/open.htm?id=4495890439",
+    "due": "2026-07-15T17:00:00",
+    "role": "master card",
+    "masterRef": null,
+    "masterExists": null,
+    "projectName": "MPY-59445_Linguini_Retargeting_Never Ending Bag",
+    "urgency": "Fixed",
+    "deliverables": "3",
+    "deliveryMonth": "July-26",
+    "vendor": "Alconost",
+    "taggedAlpha": true,
     "lqa": false,
     "isNew": false,
     "tagComments": [
       {
-        "author": "Keti Tavartkiladze",
-        "date": "2026-07-15T15:30:08Z",
-        "text": "Hi @Alpha Alconost actually, these ones will stay active, instead some Daffy retargeting loc tickets are getting cancelled, not these ones, so I&#39;m putting these back to active. Sorry for the miscommunication, I will mention the changes "
+        "author": "Maia Soboleosky",
+        "date": "2026-07-24T15:45:59Z",
+        "text": "Hi @Nikita Leonenko @Alpha Alconost this is the new line you need to translate Clashes with my outfit."
       },
       {
-        "author": "Keti Tavartkiladze",
-        "date": "2026-07-15T14:29:33Z",
-        "text": "Hi @Nikita Leonenko @Alpha Alconost this ticket no longer has localizations so I&#39;m cancelling this ticket as well as the connected individual loc tickets, thank you cc @Maia Soboleosky"
+        "author": "Maia Soboleosky",
+        "date": "2026-07-24T15:37:38Z",
+        "text": "We just received licensor feedabck, to change a VO line. They asked to swap when Bugs calls a Tweety dice a trash (&#34;yeah that’s trash&#34;) for something else. I will keep you updated so you can update your translations for the subtitle"
+      },
+      {
+        "author": "Nikita Leonenko",
+        "date": "2026-07-23T13:18:06Z",
+        "text": "Hi @Alpha Alconost here we need to transcribe the text, cut it in short lines for subtitles and then translate it. Here are also CTAs to translate TIME TO JUMP BACK IN LOONEY TUNES HAVE TAKEN OVER DON&#39;T MISS EXCLUSIVE REWARDS Please als"
+      },
+      {
+        "author": "Maia Soboleosky",
+        "date": "2026-07-22T17:29:18Z",
+        "text": "Hi @Nikita Leonenko @Alpha Alconost the video is attached for translations. We should have the source files ready EOD tomorrow, to kick off the localization."
       }
     ],
     "lqaComments": []
@@ -209,11 +406,11 @@ window.__DATA__ = [
     "id": "MAAAAAEL-efl",
     "ticket": "MPY-59483",
     "title": "MPY-59483_Linguini_Deluxe Drop ST - Loc Collaboration",
-    "language": "EN-AU",
+    "language": "FR-FR",
     "languages": [
+      "FR-FR",
       "EN-AU",
-      "DE",
-      "FR-FR"
+      "DE"
     ],
     "strings": [],
     "status": "Active",
@@ -228,21 +425,27 @@ window.__DATA__ = [
     "deliveryMonth": "July-26",
     "vendor": "Alconost",
     "taggedAlpha": true,
-    "lqa": false,
+    "lqa": true,
     "isNew": false,
     "tagComments": [
       {
-        "author": "Maia Soboleosky",
-        "date": "2026-07-10T14:29:42Z",
-        "text": "YEs @Alpha Alconost it is a typo. The correct form is &#34;Daffy Duck&#34;"
+        "author": "Nikita Leonenko",
+        "date": "2026-07-27T12:19:42Z",
+        "text": "@Alpha Alconost this is ready for LQA https://drive.google.com/drive/folders/1FZ25PKRtgSuP2HtouKoV1tku7FqLNOM4?usp&#61;sharing"
       },
       {
-        "author": "Nikita Leonenko",
-        "date": "2026-07-08T13:24:05Z",
-        "text": "@Alpha Alconost please take the text for translation. Copy localizations tasks are MPY-62254_Linguini_Deluxe Drop ST_localization_DE_Album 22 - Farming - Copy localization MPY-62233_Linguini_Deluxe Drop ST_localization_EN-AU_Album 22 - Farm"
+        "author": "Keti Tavartkiladze",
+        "date": "2026-07-23T14:52:56Z",
+        "text": "Hi @Nikita Leonenko @Alpha Alconost the initial ticket done with all on Aprimo, please move forward with loc tickets cc @Maia Soboleosky"
       }
     ],
-    "lqaComments": []
+    "lqaComments": [
+      {
+        "author": "Nikita Leonenko",
+        "date": "2026-07-27T12:19:42Z",
+        "text": "@Alpha Alconost this is ready for LQA https://drive.google.com/drive/folders/1FZ25PKRtgSuP2HtouKoV1tku7FqLNOM4?usp&#61;sharing"
+      }
+    ]
   },
   {
     "id": "MAAAAAEMuc_q",
@@ -300,132 +503,6 @@ window.__DATA__ = [
     ]
   },
   {
-    "id": "MAAAAAEMuk9R",
-    "ticket": "PF-65608",
-    "title": "PF-65608_ASMR_Shooting_Pixels_Localization_FR - Copy localization",
-    "language": "AR",
-    "languages": [
-      "AR",
-      "FR",
-      "DE",
-      "PT-PT",
-      "ES-ES"
-    ],
-    "strings": [],
-    "status": "Active",
-    "permalink": "https://www.wrike.com/open.htm?id=4508503889",
-    "due": "2026-07-17T17:00:00",
-    "role": "brief (de-facto master)",
-    "masterRef": "PF-59186",
-    "masterExists": false,
-    "projectName": "PF-65608_ASMR_Shooting_Pixels_Localization_FR",
-    "urgency": "",
-    "deliverables": "2",
-    "deliveryMonth": "July-26",
-    "vendor": "Alconost",
-    "taggedAlpha": true,
-    "lqa": true,
-    "isNew": false,
-    "tagComments": [
-      {
-        "author": "Dmitry Kuis",
-        "date": "2026-07-17T11:17:30Z",
-        "text": "Hi @Alpha Alconost ! The videos for LQA are ready and are in this folder . Could you please pass them on for LQA? Thanks!"
-      }
-    ],
-    "lqaComments": [
-      {
-        "author": "Dmitry Kuis",
-        "date": "2026-07-17T11:17:30Z",
-        "text": "Hi @Alpha Alconost ! The videos for LQA are ready and are in this folder . Could you please pass them on for LQA? Thanks!"
-      }
-    ]
-  },
-  {
-    "id": "MAAAAAEMuk2R",
-    "ticket": "PF-65613",
-    "title": "PF-65613_ASMR Pigs Factory Loop_Localization_FR - Copy localization",
-    "language": "FR",
-    "languages": [
-      "FR",
-      "DE",
-      "ES-ES",
-      "AR",
-      "PT-PT"
-    ],
-    "strings": [],
-    "status": "Active",
-    "permalink": "https://www.wrike.com/open.htm?id=4508503441",
-    "due": "2026-07-17T17:00:00",
-    "role": "brief (de-facto master)",
-    "masterRef": "PF-59185",
-    "masterExists": false,
-    "projectName": "PF-65613_ASMR Pigs Factory Loop_Localization_FR",
-    "urgency": "",
-    "deliverables": "2",
-    "deliveryMonth": "July-26",
-    "vendor": "Alconost",
-    "taggedAlpha": true,
-    "lqa": true,
-    "isNew": false,
-    "tagComments": [
-      {
-        "author": "Dmitry Kuis",
-        "date": "2026-07-17T11:17:35Z",
-        "text": "Hi @Alpha Alconost ! The videos for LQA are ready and are in this folder . Could you please pass them on for LQA? Thanks!"
-      }
-    ],
-    "lqaComments": [
-      {
-        "author": "Dmitry Kuis",
-        "date": "2026-07-17T11:17:35Z",
-        "text": "Hi @Alpha Alconost ! The videos for LQA are ready and are in this folder . Could you please pass them on for LQA? Thanks!"
-      }
-    ]
-  },
-  {
-    "id": "MAAAAAEMudcc",
-    "ticket": "PF-65618",
-    "title": "PF-65618_Ready Steady Go_Localization_FR - Copy localization",
-    "language": "AR",
-    "languages": [
-      "AR",
-      "FR",
-      "DE",
-      "PT-PT",
-      "ES-ES"
-    ],
-    "strings": [],
-    "status": "Active",
-    "permalink": "https://www.wrike.com/open.htm?id=4508473116",
-    "due": "2026-07-17T17:00:00",
-    "role": "brief (de-facto master)",
-    "masterRef": "PF-58348",
-    "masterExists": false,
-    "projectName": "PF-65618_Ready Steady Go_Localization_FR",
-    "urgency": "",
-    "deliverables": "2",
-    "deliveryMonth": "July-26",
-    "vendor": "Alconost",
-    "taggedAlpha": true,
-    "lqa": true,
-    "isNew": false,
-    "tagComments": [
-      {
-        "author": "Dmitry Kuis",
-        "date": "2026-07-17T11:17:39Z",
-        "text": "Hi @Alpha Alconost ! The videos for LQA are ready and are in this folder . Could you please pass them on for LQA? Thanks!"
-      }
-    ],
-    "lqaComments": [
-      {
-        "author": "Dmitry Kuis",
-        "date": "2026-07-17T11:17:39Z",
-        "text": "Hi @Alpha Alconost ! The videos for LQA are ready and are in this folder . Could you please pass them on for LQA? Thanks!"
-      }
-    ]
-  },
-  {
     "id": "MAAAAAEMudPO",
     "ticket": "PF-65623",
     "title": "PF-65623_Pixel Park_ Localization_FR - Copy localization",
@@ -477,48 +554,6 @@ window.__DATA__ = [
       {
         "author": "Dmitry Kuis",
         "date": "2026-07-17T11:17:43Z",
-        "text": "Hi @Alpha Alconost ! The videos for LQA are ready and are in this folder . Could you please pass them on for LQA? Thanks!"
-      }
-    ]
-  },
-  {
-    "id": "MAAAAAEMudQ1",
-    "ticket": "PF-65628",
-    "title": "PF-65628_PixelExplosion_Wizard_Localization_FR - Copy localization",
-    "language": "AR",
-    "languages": [
-      "AR",
-      "FR",
-      "DE",
-      "PT-PT",
-      "ES-ES"
-    ],
-    "strings": [],
-    "status": "Active",
-    "permalink": "https://www.wrike.com/open.htm?id=4508472373",
-    "due": "2026-07-17T17:00:00",
-    "role": "brief (de-facto master)",
-    "masterRef": "PF-59154",
-    "masterExists": false,
-    "projectName": "PF-65628_PixelExplosion_Wizard_Localization_FR",
-    "urgency": "",
-    "deliverables": "2",
-    "deliveryMonth": "July-26",
-    "vendor": "Alconost",
-    "taggedAlpha": true,
-    "lqa": true,
-    "isNew": false,
-    "tagComments": [
-      {
-        "author": "Dmitry Kuis",
-        "date": "2026-07-17T11:17:48Z",
-        "text": "Hi @Alpha Alconost ! The videos for LQA are ready and are in this folder . Could you please pass them on for LQA? Thanks!"
-      }
-    ],
-    "lqaComments": [
-      {
-        "author": "Dmitry Kuis",
-        "date": "2026-07-17T11:17:48Z",
         "text": "Hi @Alpha Alconost ! The videos for LQA are ready and are in this folder . Could you please pass them on for LQA? Thanks!"
       }
     ]
@@ -696,77 +731,78 @@ window.__DATA__ = [
     ]
   },
   {
-    "id": "MAAAAAEMudEK",
-    "ticket": "PF-65648",
-    "title": "PF-65648_Level_factory_D_Localization_FR - Copy localization",
-    "language": "PT-PT",
+    "id": "MAAAAAENFKTi",
+    "ticket": "MPY-65717",
+    "title": "MPY-65717_Farming_Trailer_Alt Music - Loc Collaboration",
+    "language": "EN-AU",
     "languages": [
-      "PT-PT",
-      "AR",
-      "ES-ES",
-      "FR",
-      "DE"
+      "EN-AU"
     ],
-    "strings": [
-      "Train your",
-      "Brain",
-      "Welcome to the amazing Pixel Flow Level Factory.",
-      "Let's play.",
-      "Play now (keep it from the previous videos)"
-    ],
+    "strings": [],
     "status": "Active",
-    "permalink": "https://www.wrike.com/open.htm?id=4508471562",
-    "due": "2026-07-17T17:00:00",
-    "role": "brief (de-facto master)",
-    "masterRef": "PF-60501",
-    "masterExists": false,
-    "projectName": "PF-65648_Level_factory_D_Localization_FR",
-    "urgency": "",
-    "deliverables": "2",
+    "permalink": "https://www.wrike.com/open.htm?id=4514424034",
+    "due": "2026-07-21T17:00:00",
+    "role": "master card",
+    "masterRef": null,
+    "masterExists": null,
+    "projectName": "MPY-65717_Farming_Trailer_Alt Music",
+    "urgency": "Fixed",
+    "deliverables": "3",
     "deliveryMonth": "July-26",
     "vendor": "Alconost",
     "taggedAlpha": true,
-    "lqa": true,
+    "lqa": false,
     "isNew": false,
     "tagComments": [
       {
-        "author": "Dmitry Kuis",
-        "date": "2026-07-20T14:39:54Z",
-        "text": "@Alpha Alconost Thanks for the feedback! We are proceeding with this version."
+        "author": "Maia Soboleosky",
+        "date": "2026-07-23T15:33:44Z",
+        "text": "Hi @Nikita Leonenko @Alpha Alconost I added the ticket to your location so it should be visible now. Is the AE file not editable? https://scopely.dam.aprimo.com/dam/contentitems/1fa8671ede8e46af82eab48d00b7abfc Is it spossible for you touse"
       },
       {
-        "author": "Dmitry Kuis",
-        "date": "2026-07-20T13:28:58Z",
-        "text": "Hi @Alpha Alconost ! We have updated the GE and FR versions and also proposed two new options for the AR voiceover. Could you please show them to the translators so they can choose the one that sounds the most natural? Thanks!"
-      },
-      {
-        "author": "Dmitry Kuis",
-        "date": "2026-07-20T10:32:06Z",
-        "text": "Hi @Alpha Alconost ! We’ll prepare a new version and update the link ASAP."
-      },
-      {
-        "author": "Dmitry Kuis",
-        "date": "2026-07-17T13:29:37Z",
-        "text": "Hi @Alpha Alconost ! The videos for LQA are ready and are in this folder . Could you please pass them on for LQA? Thanks!"
-      },
-      {
-        "author": "Dmitry Kuis",
-        "date": "2026-07-16T16:14:03Z",
-        "text": "@Viviana Diaz Granados Thanks for the feedback! @Alpha Alconost Please, could you please provide a translation for &#34;Level Factory&#34;? Thanks!"
-      },
-      {
-        "author": "Dmitry Kuis",
-        "date": "2026-07-16T14:32:22Z",
-        "text": "Hi @Alpha Alconost ! Thanks! @Viviana Diaz Granados Could you please help with this? Does &#34;Level Factory&#34; need to be translated? Thanks!"
+        "author": "Keti Tavartkiladze",
+        "date": "2026-07-23T12:24:00Z",
+        "text": "cc @Alpha Alconost Please let us know if in progress already"
       }
     ],
-    "lqaComments": [
+    "lqaComments": []
+  },
+  {
+    "id": "MAAAAAENFufy",
+    "ticket": "MPY-62294",
+    "title": "MPY-62294_Farming_Playable_Time to Harvest - Loc Collaboration",
+    "language": "FR",
+    "languages": [
+      "FR"
+    ],
+    "strings": [],
+    "status": "Active",
+    "permalink": "https://www.wrike.com/open.htm?id=4514572274",
+    "due": "2026-07-22T17:00:00",
+    "role": "master card",
+    "masterRef": null,
+    "masterExists": null,
+    "projectName": "MPY-62294_Farming_Playable_Time to Harvest",
+    "urgency": "NORMAL",
+    "deliverables": "1",
+    "deliveryMonth": "July-26",
+    "vendor": "Alconost",
+    "taggedAlpha": true,
+    "lqa": false,
+    "isNew": false,
+    "tagComments": [
       {
-        "author": "Dmitry Kuis",
-        "date": "2026-07-17T13:29:37Z",
-        "text": "Hi @Alpha Alconost ! The videos for LQA are ready and are in this folder . Could you please pass them on for LQA? Thanks!"
+        "author": "Maia Soboleosky",
+        "date": "2026-07-22T10:07:33Z",
+        "text": "Hi @Alpha Alconost let me check if I can get them. Even if it is to double check the extract of the strings."
+      },
+      {
+        "author": "Nikita Leonenko",
+        "date": "2026-07-21T16:47:31Z",
+        "text": "Hi @Alpha Alconost could you please take care of this taks? Two languages, VE needs to be added"
       }
-    ]
+    ],
+    "lqaComments": []
   },
   {
     "id": "MAAAAAEM7gNN",
@@ -790,16 +826,22 @@ window.__DATA__ = [
     "deliveryMonth": "July-26",
     "vendor": "Alconost",
     "taggedAlpha": true,
-    "lqa": false,
+    "lqa": true,
     "isNew": false,
     "tagComments": [
       {
         "author": "Nikita Leonenko",
-        "date": "2026-07-17T13:50:44Z",
-        "text": "Hi @Alpha Alconost could you please help us with this VO translation https://docs.google.com/spreadsheets/d/1VbQwknCYgGYfTIY8CjI4Tr6_eK1rCFeIU158ikc6lLw/edit?usp&#61;sharing The video reference in the attachment. Just one language here"
+        "date": "2026-07-23T10:29:29Z",
+        "text": "HI @Alpha Alconost the videos are ready for LQA - please check them https://drive.google.com/drive/folders/1OFVtuB-gBequJJWY6HAZS48c5ZW6Ok4w?usp&#61;sharing"
       }
     ],
-    "lqaComments": []
+    "lqaComments": [
+      {
+        "author": "Nikita Leonenko",
+        "date": "2026-07-23T10:29:29Z",
+        "text": "HI @Alpha Alconost the videos are ready for LQA - please check them https://drive.google.com/drive/folders/1OFVtuB-gBequJJWY6HAZS48c5ZW6Ok4w?usp&#61;sharing"
+      }
+    ]
   },
   {
     "id": "MAAAAAEM7hKs",
@@ -828,95 +870,11 @@ window.__DATA__ = [
     "tagComments": [
       {
         "author": "Nikita Leonenko",
-        "date": "2026-07-17T13:54:40Z",
-        "text": "Hi @Alpha Alconost could you please help with this translation of VO https://docs.google.com/spreadsheets/d/1r2u7okTYKsLYzoNnzYhH6Fc6gf_lesP1nBXlbeVkzsg/edit?usp&#61;sharing The reference in the attacment. Just one language here"
+        "date": "2026-07-21T15:25:56Z",
+        "text": "Hi @Larissa Marx thank you! @Alpha Alconost please mind that for future translations. @Maia Soboleosky proceeding to the recording!"
       }
     ],
     "lqaComments": []
-  },
-  {
-    "id": "MAAAAAEM-qzz",
-    "ticket": "MPY-64191",
-    "title": "MPY-64191_Oktoberfest_DE_Amusement Park - Copy localization",
-    "language": "DE",
-    "languages": [
-      "DE"
-    ],
-    "strings": [],
-    "status": "Active",
-    "permalink": "https://www.wrike.com/open.htm?id=4512722163",
-    "due": "2026-07-24T17:00:00",
-    "role": "brief (de-facto master)",
-    "masterRef": null,
-    "masterExists": null,
-    "projectName": "MPY-64191_Oktoberfest_DE_Amusement Park",
-    "urgency": "NORMAL",
-    "deliverables": "3",
-    "deliveryMonth": "July-26",
-    "vendor": "Alconost",
-    "taggedAlpha": true,
-    "lqa": false,
-    "isNew": false,
-    "tagComments": [
-      {
-        "author": "Nikita Leonenko",
-        "date": "2026-07-18T16:00:43Z",
-        "text": "Hi @Alpha Alconost here is it!"
-      },
-      {
-        "author": "Nikita Leonenko",
-        "date": "2026-07-17T14:28:29Z",
-        "text": "HI @Alpha Alconost please take care of this VO translation https://docs.google.com/spreadsheets/d/1Kpw7O5hqvnmIUrGrwp9taTaHs_7mIcz_1Tih78qTX3I/edit?usp&#61;sharing One language, the visual reference in the attachment. Please also add vendor"
-      }
-    ],
-    "lqaComments": []
-  },
-  {
-    "id": "MAAAAAEM-qaC",
-    "ticket": "MPY-64192",
-    "title": "MPY-64192_Oktoberfest_DE_View From Ferris Wheel - Copy localization",
-    "language": "DE",
-    "languages": [
-      "DE"
-    ],
-    "strings": [
-      "Time to catch the Oktoberfest fortune! Play now.",
-      "Win big in our first-ever Oktoberfest! Play now.",
-      "Take in the Oktoberfest magic! Play now!"
-    ],
-    "status": "Active",
-    "permalink": "https://www.wrike.com/open.htm?id=4512720514",
-    "due": "2026-07-24T17:00:00",
-    "role": "brief (de-facto master)",
-    "masterRef": null,
-    "masterExists": null,
-    "projectName": "MPY-64192_Oktoberfest_DE_View From Ferris Wheel",
-    "urgency": "NORMAL",
-    "deliverables": "4",
-    "deliveryMonth": "July-26",
-    "vendor": "Alconost",
-    "taggedAlpha": true,
-    "lqa": true,
-    "isNew": false,
-    "tagComments": [
-      {
-        "author": "Nikita Leonenko",
-        "date": "2026-07-18T15:57:33Z",
-        "text": "HI @Alpha Alconost :arrow_up:"
-      },
-      {
-        "author": "Nikita Leonenko",
-        "date": "2026-07-17T14:11:16Z",
-        "text": "@Alpha Alconost could you please provide the translation and assign vendor estimate value here (no LQA needed? Op1: Time to catch the Oktoberfest fortune! Play now. Op2: Win big in our first-ever Oktoberfest! Play now. Op3: Take in the Okto"
-      }
-    ],
-    "lqaComments": [
-      {
-        "author": "Nikita Leonenko",
-        "date": "2026-07-17T14:11:16Z",
-        "text": "@Alpha Alconost could you please provide the translation and assign vendor estimate value here (no LQA needed? Op1: Time to catch the Oktoberfest fortune! Play now. Op2: Win big in our first-ever Oktoberfest! Play now. Op3: Take in the Okto"
-      }
-    ]
   },
   {
     "id": "MAAAAAEM-sZ3",
@@ -946,43 +904,6 @@ window.__DATA__ = [
         "author": "Nikita Leonenko",
         "date": "2026-07-21T11:14:53Z",
         "text": "Hi @Alpha Alconost please check the message above"
-      },
-      {
-        "author": "Nikita Leonenko",
-        "date": "2026-07-17T15:03:20Z",
-        "text": "Hi @Alpha Alconost could you please take care of this ticket? Here is the text for translation https://docs.google.com/spreadsheets/d/1Q8KdXofAHb2SxVx6Dz658sBKDpS9-eFtkS55t8xkztw/edit?usp&#61;sharing One language, please also add vendor est"
-      }
-    ],
-    "lqaComments": []
-  },
-  {
-    "id": "MAAAAAEM-qy1",
-    "ticket": "MPY-65738",
-    "title": "MPY-65738_Oktoberfest_DE_End Card - Copy localization",
-    "language": "DE",
-    "languages": [
-      "DE"
-    ],
-    "strings": [],
-    "status": "Active",
-    "permalink": "https://www.wrike.com/open.htm?id=4512722101",
-    "due": "2026-08-07T17:00:00",
-    "role": "brief (de-facto master)",
-    "masterRef": null,
-    "masterExists": null,
-    "projectName": "MPY-65738_Oktoberfest_DE_End Card",
-    "urgency": "NORMAL",
-    "deliverables": "3",
-    "deliveryMonth": "August-26",
-    "vendor": "Alconost",
-    "taggedAlpha": true,
-    "lqa": false,
-    "isNew": false,
-    "tagComments": [
-      {
-        "author": "Nikita Leonenko",
-        "date": "2026-07-20T15:43:06Z",
-        "text": "Hi @Alpha Alconost could you please take care of that? There is no visual reference here. Please add VE value 1 Time to catch the Oktoberfest fortune! Play now. 2 Win big in our first-ever Oktoberfest! Play now. 3 Take in the Oktoberfest ma"
       }
     ],
     "lqaComments": []
@@ -1031,6 +952,98 @@ window.__DATA__ = [
       }
     ],
     "lqaComments": []
+  },
+  {
+    "id": "MAAAAAENR-xy",
+    "ticket": "MPY-59419",
+    "title": "MPY-59419_Evergreen_Magic Shuffle ST - Loc Collaboration",
+    "language": "FR-FR",
+    "languages": [
+      "FR-FR",
+      "EN-AU",
+      "DE"
+    ],
+    "strings": [
+      "Op1: Feel the magic happen! Win big! [PLAY NOW]",
+      "Op2: The magic is infinite! Play now.",
+      "Op3: Stack the deck! It's time to play!"
+    ],
+    "status": "Active",
+    "permalink": "https://www.wrike.com/open.htm?id=4517784690",
+    "due": "2026-08-18T17:00:00",
+    "role": "master card",
+    "masterRef": null,
+    "masterExists": null,
+    "projectName": "MPY-59419_Evergreen_Magic Shuffle ST",
+    "urgency": "Fixed",
+    "deliverables": "4",
+    "deliveryMonth": "August-26",
+    "vendor": "Alconost",
+    "taggedAlpha": true,
+    "lqa": false,
+    "isNew": false,
+    "tagComments": [
+      {
+        "author": "Nikita Leonenko",
+        "date": "2026-07-27T15:07:34Z",
+        "text": "@Alpha Alconost here is the new task for translation. Lines are Op1: Feel the magic happen! Win big! [PLAY NOW] Op2: The magic is infinite! Play now. Op3: Stack the deck! It&#39;s time to play! It&#39;s low priority, please add VE"
+      }
+    ],
+    "lqaComments": []
+  },
+  {
+    "id": "MAAAAAENRyqn",
+    "ticket": "MPY-59473",
+    "title": "MPY-59473_Evergreen_Roll to Rule - Loc Collaboration",
+    "language": "PL",
+    "languages": [
+      "PL",
+      "TR",
+      "NL",
+      "PT-PT",
+      "JP",
+      "CHT",
+      "IT",
+      "EN-AU",
+      "DE",
+      "ES-ES",
+      "FR-FR"
+    ],
+    "strings": [
+      "VO: ALL IT TAKES …",
+      "VO: … IS ONE ROLL …",
+      "VO: … TO RULE THE BOARD!",
+      "Tone: Premeditated, Suspenseful, Powerful",
+      "VO: ROLL. RULE. REPEAT.",
+      "Tone: Punchy, Strong, Triumphant"
+    ],
+    "status": "Active",
+    "permalink": "https://www.wrike.com/open.htm?id=4517735079",
+    "due": "2026-08-20T17:00:00",
+    "role": "master card",
+    "masterRef": null,
+    "masterExists": null,
+    "projectName": "MPY-59473_Evergreen_Roll to Rule",
+    "urgency": "Fixed",
+    "deliverables": "3",
+    "deliveryMonth": "August-26",
+    "vendor": "Alconost",
+    "taggedAlpha": true,
+    "lqa": false,
+    "isNew": false,
+    "tagComments": [
+      {
+        "author": "Nikita Leonenko",
+        "date": "2026-07-27T14:22:54Z",
+        "text": "Hi @Alpha Alconost here is the text for translation, low priority, the referemce in the attachment, please add VE ALL IT TAKES … … IS ONE ROLL … … TO RULE THE BOARD! ROLL. RULE. REPEAT."
+      },
+      {
+        "author": "Maia Soboleosky",
+        "date": "2026-07-27T12:23:29Z",
+        "text": "Hi @Nikita Leonenko @Alpha Alconost we have a new request for localization for August. The languages are added in the brief. I attached the WIP layout. And here are the lines for VO LINES VO: ALL IT TAKES … VO: … IS ONE ROLL … VO: … TO RULE"
+      }
+    ],
+    "lqaComments": []
   }
 ];
-window.__META__ = {"generatedAt":"2026-07-21T13:34:01.546Z"};
+window.__META__ = {"generatedAt":"2026-07-28T12:23:07.076Z"};

@@ -9,7 +9,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { refreshData, readToken } from './refresh.mjs'
-import { buildCards } from './api/wrike-cards.js'
+import { buildCards, checkAuth } from './api/wrike-cards.js'
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const PORT = process.env.PORT || 5178
@@ -20,8 +20,17 @@ http
   .createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost')
 
+    // Public Supabase config for the login screen (mirrors /api/config on Vercel).
+    if (url.pathname === '/api/config') {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' })
+      res.end(JSON.stringify({ supabaseUrl: process.env.SUPABASE_URL || '', supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '', authEnabled: !!process.env.SUPABASE_URL }))
+      return
+    }
+
     // Same endpoint the hosted (Vercel) app uses: returns live cards as JSON.
     if (url.pathname === '/api/wrike-cards') {
+      const auth = await checkAuth(req.headers['authorization'])
+      if (!auth.ok) { res.writeHead(auth.code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: auth.error })); return }
       try {
         const data = await buildCards(readToken(), Number(process.env.LOOKBACK_DAYS || '30'))
         res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' })

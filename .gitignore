@@ -11,3 +11,6 @@ npm-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# local data snapshot (never ship publicly)
+data.js

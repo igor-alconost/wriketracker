@@ -91,6 +91,15 @@ td.langs{max-width:260px;font-family:var(--mono);font-size:11.5px;color:var(--mu
   font-size:12px;font-weight:600;padding:5px 10px;border-radius:7px;cursor:pointer;white-space:nowrap;transition:.12s;}
 .sheet-btn:hover{border-color:var(--ok);color:var(--ok);}
 .sheet-btn:disabled{opacity:.5;cursor:progress;}
+.login{position:fixed;inset:0;background:var(--header);display:flex;align-items:center;justify-content:center;z-index:1000;}
+.login__box{background:var(--surface);border-radius:14px;padding:28px;width:320px;max-width:90vw;display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 60px rgba(0,0,0,.35);}
+.login__title{font-size:20px;font-weight:700;color:var(--ink);}
+.login__sub{font-size:13px;color:var(--muted);margin-top:-8px;}
+.login__box input{padding:10px 12px;border:1px solid var(--hair);border-radius:8px;font-size:14px;font-family:var(--sans);color:var(--ink);}
+.login__box input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent;}
+.login__btn{background:var(--accent);color:#fff;border:none;padding:10px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;margin-top:2px;}
+.login__btn:hover{filter:brightness(.95);}
+.login__err{color:var(--crit);font-size:12.5px;min-height:1em;}
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--charcoal);color:#fff;
   padding:11px 18px;border-radius:10px;font-size:13px;box-shadow:0 8px 28px rgba(0,0,0,.28);z-index:100;
   opacity:0;pointer-events:none;transition:opacity .2s;max-width:80vw;}
@@ -110,8 +119,19 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   <div class="brand">SCOPELY DASHBOARD</div>
   <div class="meta">
     <span id="updated">—</span>
+    <button id="signout" class="refresh-btn" style="display:none;">Sign out</button>
     <button id="refresh" class="refresh-btn"><span class="ico">↻</span> Refresh</button>
   </div>
+</div>
+<div class="login" id="login" style="display:none;">
+  <form class="login__box" id="loginForm">
+    <div class="login__title">Brief Tracker</div>
+    <div class="login__sub">Sign in to continue</div>
+    <input id="loginEmail" type="email" placeholder="Email" autocomplete="username" required />
+    <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password" required />
+    <button type="submit" class="login__btn">Sign in</button>
+    <div class="login__err" id="loginErr"></div>
+  </form>
 </div>
 <div class="topfixed">
 <div class="wrap wrap--head">
@@ -347,17 +367,54 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     renderTabs(); render(); setTopOffset();
     updateUpdated(generatedAt);
   }
+  // ---- auth (Supabase login; only kicks in when the server has SUPABASE_URL set) ----
+  var AUTH = { enabled:false, url:'', anonKey:'', token: localStorage.getItem('bt.authToken') || '' };
+  function authHeaders(){ return AUTH.token ? { Authorization: 'Bearer ' + AUTH.token } : {}; }
+  function showLogin(){ document.getElementById('login').style.display='flex'; document.getElementById('signout').style.display='none'; }
+  function hideLogin(){ document.getElementById('login').style.display='none'; document.getElementById('signout').style.display = AUTH.enabled ? '' : 'none'; }
+  function signOut(){ AUTH.token=''; localStorage.removeItem('bt.authToken'); cards=[]; render(); showLogin(); }
+  document.getElementById('signout').addEventListener('click', signOut);
+  document.getElementById('loginForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var errEl=document.getElementById('loginErr'); errEl.textContent='';
+    var email=document.getElementById('loginEmail').value.trim();
+    var pass=document.getElementById('loginPass').value;
+    fetch(AUTH.url + '/auth/v1/token?grant_type=password', {
+      method:'POST', headers:{ 'Content-Type':'application/json', apikey: AUTH.anonKey }, body: JSON.stringify({ email:email, password:pass })
+    }).then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+      .then(function(res){
+        if(!res.ok || !res.j.access_token) throw new Error(res.j.error_description || res.j.msg || 'Sign-in failed');
+        AUTH.token=res.j.access_token; localStorage.setItem('bt.authToken', AUTH.token);
+        hideLogin(); loadFromApi();
+      }).catch(function(err){ errEl.textContent = err.message || 'Sign-in failed'; });
+  });
+
   function loadFromApi(){
     var btn = document.getElementById('refresh');
     btn.disabled = true; btn.classList.add('busy');
     var prev = upd.textContent; upd.textContent = 'Loading from Wrike…';
-    return fetch('/api/wrike-cards', { cache:'no-store' })
-      .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
-      .then(function(j){ if (j.error) throw new Error(j.error); applyCards(j.cards || [], j.generatedAt); })
-      .catch(function(){ upd.textContent = (prev && prev.indexOf('Updated')===0) ? prev : 'snapshot (offline)'; })
+    return fetch('/api/wrike-cards', { cache:'no-store', headers: authHeaders() })
+      .then(function(r){
+        if (r.status===401){ showLogin(); throw new Error('__AUTH__'); }
+        if(!r.ok) throw new Error('HTTP '+r.status); return r.json();
+      })
+      .then(function(j){ if (j.error) throw new Error(j.error); hideLogin(); applyCards(j.cards || [], j.generatedAt); })
+      .catch(function(e){ if(String(e.message)!=='__AUTH__') upd.textContent = (prev && prev.indexOf('Updated')===0) ? prev : 'snapshot (offline)'; })
       .then(function(){ btn.disabled = false; btn.classList.remove('busy'); });
   }
   document.getElementById('refresh').addEventListener('click', loadFromApi);
+
+  function boot(){
+    fetch('/api/config', { cache:'no-store' })
+      .then(function(r){ return r.json(); })
+      .then(function(cfg){
+        AUTH.enabled=!!cfg.authEnabled; AUTH.url=cfg.supabaseUrl||''; AUTH.anonKey=cfg.supabaseAnonKey||'';
+        if (AUTH.enabled && !AUTH.token){ showLogin(); updateUpdated(null); return; }
+        if (AUTH.enabled) document.getElementById('signout').style.display='';
+        loadFromApi();
+      })
+      .catch(function(){ loadFromApi(); }); // no config endpoint (plain file) → offline snapshot
+  }
 
   // keep the sticky column headers docked right below the pinned top block
   function setTopOffset(){
@@ -373,8 +430,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   render();
   setTopOffset();
   updateUpdated(window.__META__ && window.__META__.generatedAt);
-  // …then pull live data if we're hosted (silently keeps the snapshot if offline).
-  loadFromApi();
+  // …then check auth + pull live data if hosted (login gate when required; snapshot if offline).
+  boot();
 })();
 </script>
 </body></html>

@@ -39,6 +39,26 @@ function langCodes(text) {
 }
 const titleCode = (title) => { const m = (title || '').match(TITLELANG); return m ? m[1].toUpperCase() : null }
 const masterCodeFrom = (texts) => { for (const t of texts || []) { const m = stripHtml(t).match(MASTERCODE); if (m) return m[1].toUpperCase() } return null }
+// Parse the description's auto-generated "Localizations" table into {lang, url} rows (the real
+// per-language sub-cards), ignoring any hand-typed "Languages/Countries" list in the description.
+const localizationRows = (desc) => {
+  if (!desc) return []
+  const start = desc.search(/Localizations?\s*\(auto/i)
+  if (start < 0) return []
+  let seg = desc.slice(start)
+  const end = seg.search(/End of localizations/i)
+  if (end >= 0) seg = seg.slice(0, end)
+  const rows = []; const trRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi; let tr
+  while ((tr = trRe.exec(seg))) {
+    const cell = tr[1]
+    const cm = cell.match(/<td[^>]*>\s*([A-Za-z][A-Za-z0-9-]{1,7})\s*<\/td>/i); if (!cm) continue
+    const code = cm[1].toUpperCase(); const norm = NORM[code] || code; if (!LANGS.has(norm)) continue
+    const hm = cell.match(/href="([^"]+)"/i)
+    rows.push({ lang: norm, url: hm ? decodeEnt(hm[1]) : '' })
+  }
+  return rows
+}
+const permId = (u) => { const m = (u || '').match(/id[=#](\d+)/); return m ? m[1] : '' }
 function parseStrings(text) {
   const lis = [...(text || '').matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)].map((m) => cleanLine(m[1])).filter(Boolean)
   if (lis.length) return lis
@@ -86,6 +106,8 @@ export async function buildCards(token, lookbackDays) {
   const present = new Set(all.map((t) => ticket(t.title)))
   const byOMP = {}
   for (const t of all) { const o = cf(t, 'Original Master Project'); if (o) (byOMP[o] ||= []).push(t) }
+  const idToTicket = {}
+  for (const t of all) { const id = permId(t.permalink); if (id) idToTicket[id] = ticket(t.title) }
   const activeAlpha = all.filter((t) => t.status === 'Active' && (t.responsibleIds || []).includes(ALPHA))
 
   const seen = new Set(); const comments = []
@@ -122,6 +144,13 @@ export async function buildCards(token, lookbackDays) {
   const nameOf = (id) => names[id] || id
   const resolve = (list) => list.map((c) => ({ author: nameOf(c.authorId), date: c.date, text: c.text }))
 
+  // Descriptions for tracked cards (batched) — used for the authoritative Localizations table.
+  const descById = {}
+  const tids = tracked.map((x) => x.task.id)
+  for (let i = 0; i < tids.length; i += 100) {
+    try { const dd = await api('/tasks/' + tids.slice(i, i + 100).join(',')); for (const tk of dd.data) descById[tk.id] = tk.description || '' } catch { /* skip on error */ }
+  }
+
   const cards = []
   for (const { task, taggedAlpha, lqa, tagComments, lqaComments, briefTexts, commentTexts } of tracked) {
     const title = task.title
@@ -133,9 +162,29 @@ export async function buildCards(token, lookbackDays) {
     // Role from the master ref, NOT the title: pointing at a parent = child; empty = top-level parent.
     const role = mref ? 'brief (de-facto master)' : 'master card'
     const key = role === 'master card' ? self : mref
+    // Prefer the auto-generated Localizations table; else fall back to sibling titles + comment codes.
+    const ownRows = localizationRows(descById[task.id] || '')
     const raw = []
-    for (const s of (key && byOMP[key]) || []) { const c = titleCode(s.title); if (c) raw.push(c) }
-    for (const text of commentTexts) for (const code of langCodes(stripHtml(text))) raw.push(code)
+    if (ownRows.length) { for (const r of ownRows) raw.push(r.lang) }
+    else {
+      for (const s of (key && byOMP[key]) || []) { const c = titleCode(s.title); if (c) raw.push(c) }
+      for (const text of commentTexts) for (const code of langCodes(stripHtml(text))) raw.push(code)
+    }
+    // Related localization cards for the expandable view: a card with its own table (or no master
+    // ref) is treated as a parent → show its children; otherwise a leaf → show siblings (same parent).
+    const isParent = ownRows.length > 0 || !mref
+    const groupKey = ownRows.length ? self : (mref || self)
+    const relItems = []; const seenId = new Set(); const seenTk = new Set()
+    if (ownRows.length) {
+      // authoritative: the auto-generated table (one row per language sub-card)
+      for (const r of ownRows) { const id = permId(r.url); if (id && seenId.has(id)) continue; if (id) seenId.add(id); relItems.push({ lang: r.lang, ticket: id ? (idToTicket[id] || '') : '', url: r.url }) }
+    } else {
+      // fallback for cards with no table: folder siblings sharing the master ref, one per language ticket
+      for (const s of (byOMP[groupKey] || [])) { const tk = ticket(s.title); if (tk === self || seenTk.has(tk)) continue; const lang = NORM[titleCode(s.title)] || titleCode(s.title) || ''; if (!lang) continue; seenTk.add(tk); relItems.push({ lang, ticket: tk, url: s.permalink || '' }) }
+    }
+    // for a child card, list the card itself in its group too (marked), on top
+    if (mref && !relItems.some((i) => i.ticket === self)) { const selfLang = NORM[titleCode(title)] || titleCode(title) || ''; relItems.unshift({ lang: selfLang, ticket: self, url: task.permalink, self: true }) }
+    const related = { type: isParent ? 'children' : 'siblings', parent: isParent ? null : (mref || null), items: relItems }
     const strings = extractStrings(briefTexts)
     const srcArr = raw.length ? raw : langCodes(cf(task, 'Language'))
     const dedup = []; for (const x of srcArr) { const y = NORM[x] || x; if (!dedup.includes(y)) dedup.push(y) }
@@ -146,7 +195,7 @@ export async function buildCards(token, lookbackDays) {
       masterRef: mref || null, masterExists: mref ? present.has(mref) : null,
       projectName: cf(task, 'Project Name'), urgency: cf(task, 'Urgency'),
       deliverables: cf(task, 'Nr of deliverables'), deliveryMonth: cf(task, 'Delivery Month'),
-      vendor: cf(task, 'Flamed Vendor'), taggedAlpha, lqa,
+      vendor: cf(task, 'Flamed Vendor'), taggedAlpha, lqa, related,
       tagComments: resolve(tagComments), lqaComments: resolve(lqaComments),
     })
   }

@@ -68,6 +68,26 @@ const MASTERCODE = /master\s*project\b[\s\S]{0,25}?\b([A-Z]{2,5}-\d{3,})/i
 const masterCodeFrom = (texts) => { for (const t of texts || []) { const m = stripHtml(t).match(MASTERCODE); if (m) return m[1].toUpperCase() } return null }
 // normalize Scopely's title codes to standard language codes
 const NORM = { GE: 'DE', SP: 'ES-ES', PT: 'PT-PT' }
+// Parse the description's auto-generated "Localizations" table into {lang, url} rows (the real
+// per-language sub-cards), ignoring any hand-typed "Languages/Countries" list in the description.
+const localizationRows = (desc) => {
+  if (!desc) return []
+  const start = desc.search(/Localizations?\s*\(auto/i)
+  if (start < 0) return []
+  let seg = desc.slice(start)
+  const end = seg.search(/End of localizations/i)
+  if (end >= 0) seg = seg.slice(0, end)
+  const rows = []; const trRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi; let tr
+  while ((tr = trRe.exec(seg))) {
+    const cell = tr[1]
+    const cm = cell.match(/<td[^>]*>\s*([A-Za-z][A-Za-z0-9-]{1,7})\s*<\/td>/i); if (!cm) continue
+    const code = cm[1].toUpperCase(); const norm = NORM[code] || code; if (!LANGS.has(norm)) continue
+    const hm = cell.match(/href="([^"]+)"/i)
+    rows.push({ lang: norm, url: hm ? decodeEnt(hm[1]) : '' })
+  }
+  return rows
+}
+const permId = (u) => { const m = (u || '').match(/id[=#](\d+)/); return m ? m[1] : '' }
 
 // --- Original-content extraction (the strings to translate, from the brief comment) ---
 const decodeEnt = (s) => (s || '')
@@ -177,6 +197,8 @@ export async function refreshData(log = () => {}) {
   // group every folder card by its Original Master Project value (for group-wide languages)
   const byOMP = {}
   for (const t of all) { const o = cf(t, 'Original Master Project'); if (o) (byOMP[o] ||= []).push(t) }
+  const idToTicket = {}
+  for (const t of all) { const id = permId(t.permalink); if (id) idToTicket[id] = ticket(t.title) }
   const activeAlpha = all.filter((t) => t.status === 'Active' && (t.responsibleIds || []).includes(ALPHA))
   log('  active cards for Alpha: ' + activeAlpha.length)
 
@@ -242,6 +264,12 @@ export async function refreshData(log = () => {}) {
   const resolve = (list) => list.map((c) => (c.author ? c : { author: nameOf(c.authorId), date: c.date, text: c.text }))
 
   log('Extracting languages…')
+  // Descriptions for tracked cards (batched) — authoritative Localizations table.
+  const descById = {}
+  const dids = tracked.map((x) => x.task.id)
+  for (let i = 0; i < dids.length; i += 100) {
+    try { const dd = await api('/tasks/' + dids.slice(i, i + 100).join(',')); for (const tk of dd.data) descById[tk.id] = tk.description || '' } catch { /* skip */ }
+  }
   const cards = []
   for (const { task, taggedAlpha, lqa, tagComments, lqaComments } of tracked) {
     const title = task.title
@@ -262,9 +290,26 @@ export async function refreshData(log = () => {}) {
     // languages = the whole group's codes (siblings sharing the master ref; a master card's group is
     // keyed by its own ticket), union any language list in this card's comments, falling back to its field.
     const key = role === 'master card' ? self : mref
+    // Prefer the auto-generated Localizations table; else fall back to sibling titles + comment codes.
+    const ownRows = localizationRows(descById[task.id] || '')
     const raw = []
-    for (const s of (key && byOMP[key]) || []) { const c = titleCode(s.title); if (c) raw.push(c) }
-    for (const c of fullComments) for (const code of langCodes(stripHtml(c.text))) raw.push(code)
+    if (ownRows.length) { for (const r of ownRows) raw.push(r.lang) }
+    else {
+      for (const s of (key && byOMP[key]) || []) { const c = titleCode(s.title); if (c) raw.push(c) }
+      for (const c of fullComments) for (const code of langCodes(stripHtml(c.text))) raw.push(code)
+    }
+    // Related localization cards for the expandable view (children if this is a parent, else siblings).
+    const isParent = ownRows.length > 0 || !mref
+    const groupKey = ownRows.length ? self : (mref || self)
+    const relItems = []; const seenId = new Set(); const seenTk = new Set()
+    if (ownRows.length) {
+      for (const r of ownRows) { const id = permId(r.url); if (id && seenId.has(id)) continue; if (id) seenId.add(id); relItems.push({ lang: r.lang, ticket: id ? (idToTicket[id] || '') : '', url: r.url }) }
+    } else {
+      for (const s of (byOMP[groupKey] || [])) { const tk = ticket(s.title); if (tk === self || seenTk.has(tk)) continue; const lang = NORM[titleCode(s.title)] || titleCode(s.title) || ''; if (!lang) continue; seenTk.add(tk); relItems.push({ lang, ticket: tk, url: s.permalink || '' }) }
+    }
+    // for a child card, list the card itself in its group too (marked), on top
+    if (mref && !relItems.some((i) => i.ticket === self)) { const selfLang = NORM[titleCode(title)] || titleCode(title) || ''; relItems.unshift({ lang: selfLang, ticket: self, url: task.permalink, self: true }) }
+    const related = { type: isParent ? 'children' : 'siblings', parent: isParent ? null : (mref || null), items: relItems }
     const strings = extractStrings(briefTexts)
     const src = raw.length ? raw : langCodes(cf(task, 'Language'))
     const langs = []
@@ -279,7 +324,7 @@ export async function refreshData(log = () => {}) {
       masterRef: mref || null, masterExists: mref ? present.has(mref) : null,
       projectName: cf(task, 'Project Name'), urgency: cf(task, 'Urgency'),
       deliverables: cf(task, 'Nr of deliverables'), deliveryMonth: cf(task, 'Delivery Month'),
-      vendor: cf(task, 'Flamed Vendor'),
+      vendor: cf(task, 'Flamed Vendor'), related,
       taggedAlpha, lqa, isNew: prevIds.size > 0 && !prevIds.has(task.id),
       tagComments: resolve(tagComments), lqaComments: resolve(lqaComments),
     })

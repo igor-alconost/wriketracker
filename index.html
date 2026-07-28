@@ -120,6 +120,23 @@ td.langs{max-width:260px;font-family:var(--mono);font-size:11.5px;color:var(--mu
   font-size:12px;font-weight:600;padding:5px 10px;border-radius:7px;cursor:pointer;white-space:nowrap;transition:.12s;}
 .sheet-btn:hover{border-color:var(--ok);color:var(--ok);}
 .sheet-btn:disabled{opacity:.5;cursor:progress;}
+.del-btn{background:none;border:none;cursor:pointer;font-size:17px;opacity:.7;padding:2px 4px;line-height:1;}
+.del-btn:hover{opacity:1;}
+.exp,.exp-spacer{display:inline-block;width:14px;margin-right:5px;text-align:center;vertical-align:middle;}
+.exp{background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;line-height:1;padding:0;}
+.exp:hover{color:var(--ink);}
+tr.detail td{background:var(--hair2);padding:10px 16px 13px;}
+.detail-head{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px;}
+.detail-n{color:var(--faint);}
+.loc-list{display:flex;flex-wrap:wrap;gap:6px;}
+.loc-item{display:inline-flex;align-items:center;gap:6px;font-size:12px;text-decoration:none;color:var(--link);background:var(--surface);border:1px solid var(--hair);border-radius:6px;padding:3px 9px;}
+.loc-item:hover{border-color:var(--link);}
+.loc-lang{font-weight:600;}
+.loc-tk{font-family:var(--mono);font-size:11px;color:var(--muted);}
+.loc-open{font-size:11px;color:var(--faint);}
+.loc-item.self{border-color:var(--accent);background:var(--crit-bg);}
+.loc-item.self .loc-lang{color:var(--accent);}
+.loc-item.self .loc-open{color:var(--accent);font-weight:600;}
 .login{position:fixed;inset:0;background:var(--header);display:flex;align-items:center;justify-content:center;z-index:1000;}
 .login__box{background:var(--surface);border-radius:14px;padding:28px;width:320px;max-width:90vw;display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 60px rgba(0,0,0,.35);}
 .login__title{font-size:20px;font-weight:700;color:var(--ink);}
@@ -187,6 +204,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
           <th class="center">LQA</th>
           <th class="center">Done</th>
           <th class="center">Sheet</th>
+          <th class="center"></th>
         </tr></thead>
         <tbody id="rows"></tbody>
       </table>
@@ -209,6 +227,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   var cards = window.__DATA__ || safeParse(localStorage.getItem(CKEY)) || [];
   var DAY = 86400000;
   var state = { tab:'all', sort:'due', dir:1, lqaOnly:false };
+  var expanded = {};  // cardId -> true when its localization cards are shown
 
   // "Done" is stored per card as the timestamp (ms) when it was checked, so a later
   // LQA handoff can auto-clear it. { cardId: doneAtMs }
@@ -252,6 +271,14 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   function latestTagTs(c){ var m=0; (c.tagComments||[]).forEach(function(x){ var t=x.date?Date.parse(x.date):0; if(t>m) m=t; }); return m; }
   function newTag(c){ var t=latestTagTs(c); return t>0 && t > Math.max(tagBaseline||0, tagSeen[c.id]||0); }
 
+  // "Deleted" rows — hidden across all users until a NEWER tagged comment arrives on that card,
+  // then the row reappears. { cardId: deletedAtMs }
+  var XKEY = 'briefTracker.deleted';
+  var delMap = {};
+  try { delMap = JSON.parse(localStorage.getItem(XKEY) || '{}') || {}; } catch(e){ delMap = {}; }
+  function saveDel(){ localStorage.setItem(XKEY, JSON.stringify(delMap)); }
+  function isDeleted(c){ return (c.id in delMap) && latestTagTs(c) <= delMap[c.id]; }
+
   // "LQA dismissed" — user can remove the LQA tag; stored as the timestamp when dismissed,
   // so a later LQA handoff comment brings it back. { cardId: dismissedAtMs }
   var LKEY = 'briefTracker.lqaDismissed';
@@ -267,7 +294,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     if(changed) saveLqa();
   }
   function lqaVisible(c){ return c.lqa && !(c.id in lqaDismiss); }
-  function lqaCount(){ return cards.filter(lqaVisible).length; }
+  function lqaCount(){ return cards.filter(function(c){ return !isDeleted(c) && lqaVisible(c); }).length; }
 
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
   function daysUntil(due){ if(!due) return null; var d=new Date(due.length<=10?due+'T00:00:00':due); return Math.round((d-new Date())/DAY); }
@@ -278,12 +305,14 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   var ips = Array.from(new Set(cards.map(ipOf))).sort();
   function tabBtn(id,label,count){ return '<button class="tab'+(state.tab===id?' on':'')+'" data-tab="'+esc(id)+'">'+esc(label)+' <span class="badge">'+count+'</span></button>'; }
   function renderTabs(){
-    var html = tabBtn('all','All',cards.length);
-    ips.forEach(function(i){ html += tabBtn(i,i,cards.filter(function(c){return ipOf(c)===i;}).length); });
+    var vis = cards.filter(function(c){ return !isDeleted(c); });
+    var html = tabBtn('all','All',vis.length);
+    ips.forEach(function(i){ html += tabBtn(i,i,vis.filter(function(c){return ipOf(c)===i;}).length); });
     document.getElementById('tabs').innerHTML = html;
   }
 
   function passes(c){
+    if(isDeleted(c)) return false;
     if(state.tab!=='all' && ipOf(c)!==state.tab) return false;
     if(state.lqaOnly && !lqaVisible(c)) return false;
     return true;
@@ -320,8 +349,11 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     var isc = isDone(c);
     var cls = ((isc?'checked ':'')+(c.isNew?'isnew':'')).trim();
     function chk(kind, on){ return '<td class="center"><input class="chk" type="checkbox" data-kind="'+kind+'" data-id="'+esc(c.id)+'"'+(on?' checked':'')+'/></td>'; }
+    var hasRel = c.related && c.related.items && c.related.items.length;
     return '<tr class="'+cls+'">'
-      + '<td><a class="tk" href="'+esc(c.permalink)+'" target="_blank" rel="noreferrer">'+esc(c.ticket)+'</a>'
+      + '<td>'
+        + (hasRel?'<button class="exp" data-exp="'+esc(c.id)+'" title="Show localization cards">'+(expanded[c.id]?'▾':'▸')+'</button>':'<span class="exp-spacer"></span>')
+        + '<a class="tk" href="'+esc(c.permalink)+'" target="_blank" rel="noreferrer">'+esc(c.ticket)+'</a>'
         + (newTag(c)?'<span class="msgchip"><span class="msg-open" data-msg-id="'+esc(c.id)+'" title="Read the new tagged message">💬</span><span class="msg-x" data-msg-clear="'+esc(c.id)+'" title="Clear for everyone">✕</span></span>':'')
         + (c.isNew?'<span class="new-badge">NEW</span>':'')+'</td>'
       + '<td class="desc" title="'+esc(c.title)+'">'+esc(c.title)+'</td>'
@@ -332,7 +364,26 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
       + chk('lqadone', isLqaDone(c))
       + chk('done', isc)
       + '<td class="center"><button class="sheet-btn" data-sheet="'+esc(c.id)+'">→ Sheet</button></td>'
+      + '<td class="center"><button class="del-btn" data-del="'+esc(c.id)+'" title="Delete this row (comes back if a new tagged comment arrives)">🗑</button></td>'
       + '</tr>';
+  }
+  function detailHtml(c){
+    var r = c.related || { items:[] };
+    var head = r.type==='siblings'
+      ? ('Sibling localization cards' + (r.parent?(' under '+esc(r.parent)):''))
+      : 'Localization cards';
+    var chips = r.items.map(function(i){
+      if(i.self){
+        return '<a class="loc-item self" href="'+esc(i.url)+'" target="_blank" rel="noreferrer">'
+          + (i.lang?'<span class="loc-lang">'+esc(i.lang)+'</span>':'')
+          + '<span class="loc-open">this card</span></a>';
+      }
+      return '<a class="loc-item" href="'+esc(i.url)+'" target="_blank" rel="noreferrer">'
+        + '<span class="loc-lang">'+esc(i.lang||'?')+'</span>'
+        + (i.ticket?'<span class="loc-tk">'+esc(i.ticket)+'</span>':'<span class="loc-open">open ↗</span>')
+        + '</a>';
+    }).join('');
+    return '<tr class="detail"><td colspan="10"><div class="detail-head">'+head+' <span class="detail-n">'+r.items.length+'</span></div><div class="loc-list">'+chips+'</div></td></tr>';
   }
   function updateTitle(shown){
     document.getElementById('paneltitle').innerHTML =
@@ -342,8 +393,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     var list = sortList(cards.filter(passes));
     updateTitle(list.length);
     document.getElementById('rows').innerHTML = list.length
-      ? list.map(rowHtml).join('')
-      : '<tr><td colspan="9" class="empty">No cards match.</td></tr>';
+      ? list.map(function(c){ return rowHtml(c) + (expanded[c.id] && c.related && c.related.items.length ? detailHtml(c) : ''); }).join('')
+      : '<tr><td colspan="10" class="empty">No cards match.</td></tr>';
     Array.prototype.forEach.call(document.querySelectorAll('th.sortable'), function(th){
       var k=th.getAttribute('data-sort');
       var label = k==='isNew'?'Card':k==='language'?'Lang':k==='lqa'?'LQA ready':k;
@@ -359,6 +410,13 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   document.getElementById('lqaFilter').addEventListener('click', function(){
     state.lqaOnly=!state.lqaOnly; this.classList.toggle('on', state.lqaOnly); render();
   });
+  // expand/collapse a card's localization cards
+  document.getElementById('rows').addEventListener('click', function(e){
+    var b=e.target.closest('.exp[data-exp]'); if(!b) return;
+    var id=b.getAttribute('data-exp');
+    if(expanded[id]) delete expanded[id]; else expanded[id]=true;
+    render();
+  });
   // click the LQA pill's ✕ (or the pill) to dismiss it; remembered until a newer LQA comment
   document.getElementById('rows').addEventListener('click', function(e){
     var x=e.target.closest('.pill.lqa .x'); if(!x) return;
@@ -373,6 +431,16 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     if(open){ openMsg(open.getAttribute('data-msg-id')); return; }
     var clr=e.target.closest('.msg-x[data-msg-clear]');
     if(clr){ var id=clr.getAttribute('data-msg-clear'), ts=Date.now(); tagSeen[id]=ts; saveTagSeen(); render(); syncWrite({ kind:'tagseen', id:id, ts:ts }); return; }
+  });
+  // delete a row (shared) — confirm first; it reappears when a newer tagged comment arrives
+  document.getElementById('rows').addEventListener('click', function(e){
+    var b=e.target.closest('.del-btn[data-del]'); if(!b) return;
+    var id=b.getAttribute('data-del');
+    var c=cards.filter(function(x){return x.id===id;})[0];
+    var name=c?c.ticket:'this card';
+    if(!confirm('Delete row '+name+'?\n\nThis hides it for everyone. It will come back automatically if a new tagged comment arrives on the card.')) return;
+    var ts=Date.now(); delMap[id]=ts; saveDel(); renderTabs(); render();
+    syncWrite({ kind:'deleted', id:id, ts:ts });
   });
   // ---- popup showing a card's tagged message content ----
   function openMsg(id){
@@ -499,8 +567,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   function applyState(s){
     if(!s) return;
     doneMap = s.done || {}; lqaDismiss = s.lqa || {}; transMap = s.trans || {}; lqaMap = s.lqadone || {};
-    tagSeen = s.tagseen || {}; setBaseline(s.tagBaseline);
-    saveDone(); saveLqa(); saveTrans(); saveLqaDone(); saveTagSeen();   // keep the local cache mirrored
+    tagSeen = s.tagseen || {}; setBaseline(s.tagBaseline); delMap = s.deleted || {};
+    saveDone(); saveLqa(); saveTrans(); saveLqaDone(); saveTagSeen(); saveDel();   // keep the local cache mirrored
     reconcileLqa();
     render();
   }
@@ -525,9 +593,11 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
           Object.keys(transMap).forEach(function(id){ if(!(id in (server.trans||{}))) postState({kind:'trans',id:id,ts:transMap[id]}).catch(function(){}); });
           Object.keys(lqaMap).forEach(function(id){ if(!(id in (server.lqadone||{}))) postState({kind:'lqadone',id:id,ts:lqaMap[id]}).catch(function(){}); });
           Object.keys(tagSeen).forEach(function(id){ if(!(id in (server.tagseen||{}))) postState({kind:'tagseen',id:id,ts:tagSeen[id]}).catch(function(){}); });
+          Object.keys(delMap).forEach(function(id){ if(!(id in (server.deleted||{}))) postState({kind:'deleted',id:id,ts:delMap[id]}).catch(function(){}); });
           applyState({ done: Object.assign({}, doneMap, server.done||{}), lqa: Object.assign({}, lqaDismiss, server.lqa||{}),
                        trans: Object.assign({}, transMap, server.trans||{}), lqadone: Object.assign({}, lqaMap, server.lqadone||{}),
-                       tagseen: Object.assign({}, tagSeen, server.tagseen||{}), tagBaseline: server.tagBaseline });
+                       tagseen: Object.assign({}, tagSeen, server.tagseen||{}), tagBaseline: server.tagBaseline,
+                       deleted: Object.assign({}, delMap, server.deleted||{}) });
         } else {
           applyState(server);
         }

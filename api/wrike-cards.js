@@ -27,6 +27,10 @@ const decodeEnt = (s) => (s || '')
   .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
 const cleanLine = (s) => decodeEnt((s || '').replace(/<[^>]+>/g, '')).replace(/[ \t]+/g, ' ').trim()
 const stripHtml = (s) => decodeEnt((s || '').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim()
+// like stripHtml but keeps line breaks (<br>, block-close tags → newlines) for displaying comment text
+const stripHtmlLines = (s) => decodeEnt(
+  (s || '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|li|h[1-6]|tr)>/gi, '\n').replace(/<[^>]+>/g, ' ')
+).replace(/[ \t]+/g, ' ').replace(/[ \t]*\n[ \t]*/g, '\n').replace(/\n{3,}/g, '\n\n').trim()
 
 function langCodes(text) {
   const out = []; let m; NAMECODE.lastIndex = 0
@@ -98,7 +102,7 @@ export async function buildCards(token, lookbackDays) {
 
   const LQA = /\bLQA\b/i
   const authors = new Set()
-  const conv = (list) => list.map((c) => ({ authorId: c.authorId, date: c.createdDate, text: stripHtml(c.text).slice(0, 240) }))
+  const conv = (list) => list.map((c) => ({ authorId: c.authorId, date: c.createdDate, text: stripHtmlLines(c.text).slice(0, 1200) }))
   const tracked = []
   for (const t of activeAlpha) {
     const cs = (byTask[t.id] || []).slice().sort((a, b) => (b.createdDate || '').localeCompare(a.createdDate || ''))

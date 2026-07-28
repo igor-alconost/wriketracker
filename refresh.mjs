@@ -110,6 +110,10 @@ function extractStrings(texts) {
 }
 const stripHtml = (s) =>
   (s || '').replace(/<[^>]+>/g, ' ').replace(/&#64;/g, '@').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim()
+// like stripHtml but keeps line breaks (<br>, block-close tags → newlines) for displaying comment text
+const stripHtmlLines = (s) => decodeEnt(
+  (s || '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|li|h[1-6]|tr)>/gi, '\n').replace(/<[^>]+>/g, ' ')
+).replace(/[ \t]+/g, ' ').replace(/[ \t]*\n[ \t]*/g, '\n').replace(/\n{3,}/g, '\n\n').trim()
 
 // Read the previous snapshot so signals older than the 7-day comment window persist.
 function readCache() {
@@ -200,7 +204,7 @@ export async function refreshData(log = () => {}) {
 
   // 3) Detect signals per active card (fresh comments), fall back to cache for older signals.
   const authors = new Set()
-  const conv = (list) => list.map((c) => ({ authorId: c.authorId, date: c.createdDate, text: stripHtml(c.text).slice(0, 240) }))
+  const conv = (list) => list.map((c) => ({ authorId: c.authorId, date: c.createdDate, text: stripHtmlLines(c.text).slice(0, 1200) }))
   const tracked = []
   for (const t of activeAlpha) {
     const cs = (byTask[t.id] || []).slice().sort((a, b) => (b.createdDate || '').localeCompare(a.createdDate || ''))

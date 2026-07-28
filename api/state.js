@@ -1,7 +1,11 @@
 // Vercel serverless function (Node): shared Done / LQA-dismissed state for all users.
-// GET  /api/state            -> { done:{cardId:ts}, lqaDismissed:{cardId:ts} }
-// POST /api/state  body {kind:'done'|'lqa', id, ts}          -> set the flag
-//                  body {kind:'done'|'lqa', id, remove:true} -> clear the flag
+// GET  /api/state            -> { done:{}, lqa:{}, trans:{}, lqadone:{} }   (cardId -> ts)
+// POST /api/state  body {kind, id, ts}          -> set the flag
+//                  body {kind, id, remove:true} -> clear the flag
+// kind is one of: 'done' (Done), 'lqa' (LQA-ready pill dismissed),
+//                 'trans' (Translation/proofread), 'lqadone' (LQA checkbox),
+//                 'tagseen' (cleared the new-tagged-message mark).
+// GET also returns tagBaseline: a single shared "tracking start" timestamp (seeded once).
 // Backed by Neon (Vercel's Postgres). Same shared-password gate as /api/wrike-cards.
 import { neon } from '@neondatabase/serverless'
 import { checkAuth } from './wrike-cards.js'
@@ -28,11 +32,19 @@ async function ensureTable(sql) {
   _ready = true
 }
 
+const KINDS = new Set(['done', 'lqa', 'trans', 'lqadone', 'tagseen'])
+
 async function readAll(sql) {
   const rows = await sql`SELECT kind, card_id, ts FROM bt_state`
-  const done = {}, lqaDismissed = {}
-  for (const r of rows) (r.kind === 'done' ? done : lqaDismissed)[r.card_id] = Number(r.ts)
-  return { done, lqaDismissed }
+  const out = { done: {}, lqa: {}, trans: {}, lqadone: {}, tagseen: {} }
+  let baseline = null
+  for (const r of rows) {
+    if (r.kind === 'meta') { if (r.card_id === 'tagBaseline') baseline = Number(r.ts); continue }
+    if (!out[r.kind]) out[r.kind] = {}
+    out[r.kind][r.card_id] = Number(r.ts)
+  }
+  out.tagBaseline = baseline
+  return out
 }
 
 export default async function handler(req, res) {
@@ -42,13 +54,16 @@ export default async function handler(req, res) {
     const sql = db()
     await ensureTable(sql)
     if (req.method === 'GET') {
+      // seed the shared "tracking start" baseline once (first ever GET)
+      await sql`INSERT INTO bt_state (kind, card_id, ts) VALUES ('meta', 'tagBaseline', ${Date.now()})
+                ON CONFLICT (kind, card_id) DO NOTHING`
       res.setHeader('Cache-Control', 'no-store')
       res.status(200).json(await readAll(sql))
       return
     }
     if (req.method === 'POST') {
       const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {})
-      const kind = body.kind === 'lqa' ? 'lqa' : body.kind === 'done' ? 'done' : null
+      const kind = KINDS.has(body.kind) ? body.kind : null
       const id = String(body.id || '')
       if (!kind || !id) { res.status(400).json({ error: 'kind and id required' }); return }
       if (body.remove) {

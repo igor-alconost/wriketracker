@@ -56,7 +56,8 @@ tbody td{padding:8px 16px;line-height:1.3;border-bottom:1px solid var(--hair2);v
 tbody tr{transition:background .1s;}
 tbody tr:last-child td{border-bottom:none;}
 tbody tr:hover{background:var(--hair2);}
-tbody tr.checked{opacity:.55;}
+tbody tr.checked{background:#e4e8ec;}
+tbody tr.checked td{color:var(--muted);}
 tbody tr.checked .desc{text-decoration:line-through;}
 .tk{font-family:var(--sans);font-weight:600;color:var(--link);text-decoration:none;white-space:nowrap;font-variant-numeric:tabular-nums;}
 .new-badge{display:inline-block;background:var(--accent);color:#fff;font-size:9px;font-weight:800;letter-spacing:.06em;
@@ -84,6 +85,26 @@ td.langs{max-width:260px;font-family:var(--mono);font-size:11.5px;color:var(--mu
 .chip-toggle.on .n{background:var(--lqa);}
 .mbadge{font-size:11px;font-weight:600;font-family:var(--mono);white-space:nowrap;}
 .mbadge.ok{color:var(--ok);} .mbadge.miss{color:var(--crit);} .mbadge.none{color:var(--faint);}
+.thsub{font-weight:600;opacity:.65;text-transform:none;letter-spacing:0;}
+.msgchip{display:inline-flex;align-items:center;gap:6px;margin-left:8px;padding:2px 9px;border-radius:999px;background:#fbe1bd;border:1.5px solid var(--lqa);vertical-align:middle;}
+.msgchip .msg-open{cursor:pointer;font-size:15px;line-height:1;}
+.msgchip .msg-x{cursor:pointer;font-size:11px;font-weight:800;color:#b96f16;opacity:.85;line-height:1;}
+.msgchip .msg-x:hover{opacity:1;}
+@media (prefers-reduced-motion:no-preference){
+  .msgchip{animation:msgpulse 2s ease-in-out infinite;}
+  @keyframes msgpulse{0%,100%{box-shadow:0 0 0 0 rgba(229,148,47,0);}50%{box-shadow:0 0 0 5px rgba(229,148,47,.33);}}
+}
+.modal{position:fixed;inset:0;background:rgba(20,24,28,.45);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+.modal-card{background:var(--surface);border-radius:12px;max-width:560px;width:100%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.25);}
+.modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--hair);}
+.modal-head b{font-size:15px;}
+.modal-x{background:none;border:none;font-size:16px;cursor:pointer;color:var(--muted);line-height:1;padding:2px 4px;}
+.modal-x:hover{color:var(--ink);}
+.modal-body{padding:6px 18px 16px;overflow:auto;}
+.msgitem{padding:12px 0;border-bottom:1px solid var(--hair2);}
+.msgitem:last-child{border-bottom:none;}
+.msgmeta{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:5px;}
+.msgtext{font-size:13px;color:var(--ink);white-space:pre-wrap;line-height:1.55;}
 .typecell .a-role{font-size:12.5px;font-weight:650;}
 .typecell .a-role.parent{color:var(--ok);}
 .typecell .a-role.child{color:var(--brief);}
@@ -161,7 +182,9 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
           <th>Description</th>
           <th class="sortable" data-sort="language">Lang</th>
           <th>Type</th>
-          <th class="sortable" data-sort="lqa">LQA</th>
+          <th class="sortable" data-sort="lqa">LQA ready</th>
+          <th class="center">Translation<br><span class="thsub">(proofread)</span></th>
+          <th class="center">LQA</th>
           <th class="center">Done</th>
           <th class="center">Sheet</th>
         </tr></thead>
@@ -169,13 +192,21 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
       </table>
     </div>
   </div>
-  <div class="foot">snapshot · refresh with <code>node refresh.mjs</code></div>
 </div>
 <div class="toast" id="toast"></div>
+<div class="modal" id="msgpop" style="display:none">
+  <div class="modal-card">
+    <div class="modal-head"><b id="msgpopTitle">Tagged message</b><button class="modal-x" id="msgpopClose" title="Close">✕</button></div>
+    <div class="modal-body" id="msgpopBody"></div>
+  </div>
+</div>
 <script src="data.js"></script>
 <script>
 (function(){
-  var cards = window.__DATA__ || [];
+  var CKEY = 'bt.cards', MKEY = 'bt.cardsAt';
+  function safeParse(s){ try { return JSON.parse(s); } catch(e){ return null; } }
+  // paint instantly from the last cards we saw (survives reload); the live fetch refreshes it
+  var cards = window.__DATA__ || safeParse(localStorage.getItem(CKEY)) || [];
   var DAY = 86400000;
   var state = { tab:'all', sort:'due', dir:1, lqaOnly:false };
 
@@ -196,16 +227,30 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   function lqaAfterDone(c, ts){
     return c.lqa && (c.lqaComments||[]).some(function(x){ return x.date && Date.parse(x.date) > ts; });
   }
-  // clear Done on any card that got an LQA handoff after it was marked done
-  function reconcileDone(){
-    var changed=false;
-    cards.forEach(function(c){
-      if((c.id in doneMap) && lqaAfterDone(c, doneMap[c.id])){ delete doneMap[c.id]; changed=true; }
-    });
-    if(changed) saveDone();
-  }
   function isDone(c){ return c.id in doneMap; }
   function doneCount(){ return Object.keys(doneMap).length; }
+
+  // "Translation (proofread)" and "LQA" — plain per-card checkboxes, shared across users.
+  var TKEY = 'briefTracker.trans', QKEY = 'briefTracker.lqadone';
+  var transMap = {}, lqaMap = {};
+  try { transMap = JSON.parse(localStorage.getItem(TKEY) || '{}') || {}; } catch(e){ transMap = {}; }
+  try { lqaMap   = JSON.parse(localStorage.getItem(QKEY) || '{}') || {}; } catch(e){ lqaMap   = {}; }
+  function saveTrans(){ localStorage.setItem(TKEY, JSON.stringify(transMap)); }
+  function saveLqaDone(){ localStorage.setItem(QKEY, JSON.stringify(lqaMap)); }
+  function isTrans(c){ return c.id in transMap; }
+  function isLqaDone(c){ return c.id in lqaMap; }
+
+  // "New tagged message" mark — shows when a card's newest Alpha-tagged comment is newer than the
+  // shared baseline (tracking start) or the last time anyone cleared it. Clearing is shared; a still-
+  // newer tagged comment re-shows it. { cardId: clearedAtMs } + one shared baseline timestamp.
+  var GKEY = 'briefTracker.tagseen';
+  var tagSeen = {};
+  try { tagSeen = JSON.parse(localStorage.getItem(GKEY) || '{}') || {}; } catch(e){ tagSeen = {}; }
+  var tagBaseline = Number(localStorage.getItem('briefTracker.tagBaseline')) || Date.now();
+  function saveTagSeen(){ localStorage.setItem(GKEY, JSON.stringify(tagSeen)); }
+  function setBaseline(b){ if(b!=null){ tagBaseline = Number(b); localStorage.setItem('briefTracker.tagBaseline', String(tagBaseline)); } }
+  function latestTagTs(c){ var m=0; (c.tagComments||[]).forEach(function(x){ var t=x.date?Date.parse(x.date):0; if(t>m) m=t; }); return m; }
+  function newTag(c){ var t=latestTagTs(c); return t>0 && t > Math.max(tagBaseline||0, tagSeen[c.id]||0); }
 
   // "LQA dismissed" — user can remove the LQA tag; stored as the timestamp when dismissed,
   // so a later LQA handoff comment brings it back. { cardId: dismissedAtMs }
@@ -274,13 +319,18 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     var langCell = langs.length ? esc(langs.join(', ')) : '—';
     var isc = isDone(c);
     var cls = ((isc?'checked ':'')+(c.isNew?'isnew':'')).trim();
+    function chk(kind, on){ return '<td class="center"><input class="chk" type="checkbox" data-kind="'+kind+'" data-id="'+esc(c.id)+'"'+(on?' checked':'')+'/></td>'; }
     return '<tr class="'+cls+'">'
-      + '<td><a class="tk" href="'+esc(c.permalink)+'" target="_blank" rel="noreferrer">'+esc(c.ticket)+'</a>'+(c.isNew?'<span class="new-badge">NEW</span>':'')+'</td>'
+      + '<td><a class="tk" href="'+esc(c.permalink)+'" target="_blank" rel="noreferrer">'+esc(c.ticket)+'</a>'
+        + (newTag(c)?'<span class="msgchip"><span class="msg-open" data-msg-id="'+esc(c.id)+'" title="Read the new tagged message">💬</span><span class="msg-x" data-msg-clear="'+esc(c.id)+'" title="Clear for everyone">✕</span></span>':'')
+        + (c.isNew?'<span class="new-badge">NEW</span>':'')+'</td>'
       + '<td class="desc" title="'+esc(c.title)+'">'+esc(c.title)+'</td>'
       + '<td class="langs" title="'+esc(langs.join(', '))+'">'+langCell+'</td>'
       + '<td class="typecell">'+typeInner+'</td>'
       + '<td>'+lqa+'</td>'
-      + '<td class="center"><input class="chk" type="checkbox" data-id="'+esc(c.id)+'"'+(isc?' checked':'')+'/></td>'
+      + chk('trans', isTrans(c))
+      + chk('lqadone', isLqaDone(c))
+      + chk('done', isc)
       + '<td class="center"><button class="sheet-btn" data-sheet="'+esc(c.id)+'">→ Sheet</button></td>'
       + '</tr>';
   }
@@ -293,10 +343,10 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     updateTitle(list.length);
     document.getElementById('rows').innerHTML = list.length
       ? list.map(rowHtml).join('')
-      : '<tr><td colspan="7" class="empty">No cards match.</td></tr>';
+      : '<tr><td colspan="9" class="empty">No cards match.</td></tr>';
     Array.prototype.forEach.call(document.querySelectorAll('th.sortable'), function(th){
       var k=th.getAttribute('data-sort');
-      var label = k==='isNew'?'Card':k==='language'?'Lang':k==='lqa'?'LQA':k;
+      var label = k==='isNew'?'Card':k==='language'?'Lang':k==='lqa'?'LQA ready':k;
       th.innerHTML = label + (state.sort===k ? ' <span class="arr">'+(state.dir>0?'▲':'▼')+'</span>' : '');
     });
     document.getElementById('lqaCount').textContent = lqaCount();
@@ -317,6 +367,33 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     lqaDismiss[id]=ts; saveLqa(); render();
     syncWrite({ kind:'lqa', id:id, ts:ts });
   });
+  // the 💬 bubble opens the tagged message(s); its ✕ clears the mark for everyone
+  document.getElementById('rows').addEventListener('click', function(e){
+    var open=e.target.closest('.msg-open[data-msg-id]');
+    if(open){ openMsg(open.getAttribute('data-msg-id')); return; }
+    var clr=e.target.closest('.msg-x[data-msg-clear]');
+    if(clr){ var id=clr.getAttribute('data-msg-clear'), ts=Date.now(); tagSeen[id]=ts; saveTagSeen(); render(); syncWrite({ kind:'tagseen', id:id, ts:ts }); return; }
+  });
+  // ---- popup showing a card's tagged message content ----
+  function openMsg(id){
+    var c=cards.filter(function(x){return x.id===id;})[0]; if(!c) return;
+    var all=(c.tagComments||[]).slice().sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+    // show every tagged message that arrived since the last time this was cleared (unread), newest first;
+    // so a new message stacks on top of the older un-cleared one(s). Fall back to the latest if needed.
+    var thr=Math.max(tagBaseline||0, tagSeen[c.id]||0);
+    var list=all.filter(function(x){ return x.date && Date.parse(x.date) > thr; });
+    if(!list.length && all.length) list=[all[0]];
+    var body=list.map(function(x){
+      return '<div class="msgitem"><div class="msgmeta">'+esc(x.author||'')+' · '+fmtDate(x.date)+'</div><div class="msgtext">'+esc(x.text||'')+'</div></div>';
+    }).join('') || '<div class="msgtext">No message content available.</div>';
+    document.getElementById('msgpopTitle').textContent = c.ticket + ' — tagged message'+(list.length>1?'s ('+list.length+')':'');
+    document.getElementById('msgpopBody').innerHTML = body;
+    document.getElementById('msgpop').style.display='flex';
+  }
+  function closeMsg(){ document.getElementById('msgpop').style.display='none'; }
+  document.getElementById('msgpopClose').addEventListener('click', closeMsg);
+  document.getElementById('msgpop').addEventListener('click', function(e){ if(e.target===this) closeMsg(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeMsg(); });
 
   // ---- "→ Sheet": push a card to its Google Sheet via the Apps Script web app ----
   var SHEET_URL_KEY='briefTracker.sheetUrl';
@@ -358,12 +435,14 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   });
   document.getElementById('rows').addEventListener('change', function(e){
     var box=e.target.closest('.chk'); if(!box) return;
-    var id=box.getAttribute('data-id'), ts=Date.now();
-    if(box.checked) doneMap[id]=ts; else delete doneMap[id];
-    saveDone();
-    box.closest('tr').classList.toggle('checked', box.checked);
+    var id=box.getAttribute('data-id'), kind=box.getAttribute('data-kind'), ts=Date.now();
+    var map = kind==='trans' ? transMap : kind==='lqadone' ? lqaMap : doneMap;
+    var save = kind==='trans' ? saveTrans : kind==='lqadone' ? saveLqaDone : saveDone;
+    if(box.checked) map[id]=ts; else delete map[id];
+    save();
+    if(kind==='done') box.closest('tr').classList.toggle('checked', box.checked); // only Done greys the row
     updateTitle(cards.filter(passes).length);
-    syncWrite(box.checked ? { kind:'done', id:id, ts:ts } : { kind:'done', id:id, remove:true });
+    syncWrite(box.checked ? { kind:kind, id:id, ts:ts } : { kind:kind, id:id, remove:true });
   });
 
   // ---- data source: live API (/api/wrike-cards) when hosted, else bundled data.js ----
@@ -377,9 +456,10 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   function applyCards(newCards, generatedAt){
     cards = newCards || [];
     ips = Array.from(new Set(cards.map(ipOf))).sort();
-    reconcileDone(); reconcileLqa();
+    reconcileLqa();
     renderTabs(); render(); setTopOffset();
     updateUpdated(generatedAt);
+    try { localStorage.setItem(CKEY, JSON.stringify(cards)); if(generatedAt) localStorage.setItem(MKEY, generatedAt); } catch(e){}
   }
   // ---- shared-password gate (active only when the server has SITE_PASSWORD set) ----
   var KEY = localStorage.getItem('bt.key') || '';
@@ -387,7 +467,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   function authHeaders(){ return KEY ? { 'x-access-key': KEY } : {}; }
   function showLogin(){ document.getElementById('login').style.display='flex'; signout.style.display='none'; }
   function hideLogin(){ document.getElementById('login').style.display='none'; }
-  function signOut(){ KEY=''; localStorage.removeItem('bt.key'); cards=[]; render(); showLogin(); }
+  function signOut(){ KEY=''; localStorage.removeItem('bt.key'); localStorage.removeItem(CKEY); localStorage.removeItem(MKEY); cards=[]; render(); showLogin(); }
   signout.addEventListener('click', signOut);
   document.getElementById('loginForm').addEventListener('submit', function(e){
     e.preventDefault();
@@ -418,9 +498,10 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   var sharedOK = false, migrated = false;
   function applyState(s){
     if(!s) return;
-    doneMap = s.done || {}; lqaDismiss = s.lqaDismissed || {};
-    saveDone(); saveLqa();                 // keep the local cache mirrored
-    reconcileDone(); reconcileLqa();
+    doneMap = s.done || {}; lqaDismiss = s.lqa || {}; transMap = s.trans || {}; lqaMap = s.lqadone || {};
+    tagSeen = s.tagseen || {}; setBaseline(s.tagBaseline);
+    saveDone(); saveLqa(); saveTrans(); saveLqaDone(); saveTagSeen();   // keep the local cache mirrored
+    reconcileLqa();
     render();
   }
   function postState(body){
@@ -440,8 +521,13 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
           migrated = true;
           // one-time migration: push any local-only marks up so nothing already ticked here is lost
           Object.keys(doneMap).forEach(function(id){ if(!(id in (server.done||{}))) postState({kind:'done',id:id,ts:doneMap[id]}).catch(function(){}); });
-          Object.keys(lqaDismiss).forEach(function(id){ if(!(id in (server.lqaDismissed||{}))) postState({kind:'lqa',id:id,ts:lqaDismiss[id]}).catch(function(){}); });
-          applyState({ done: Object.assign({}, doneMap, server.done||{}), lqaDismissed: Object.assign({}, lqaDismiss, server.lqaDismissed||{}) });
+          Object.keys(lqaDismiss).forEach(function(id){ if(!(id in (server.lqa||{}))) postState({kind:'lqa',id:id,ts:lqaDismiss[id]}).catch(function(){}); });
+          Object.keys(transMap).forEach(function(id){ if(!(id in (server.trans||{}))) postState({kind:'trans',id:id,ts:transMap[id]}).catch(function(){}); });
+          Object.keys(lqaMap).forEach(function(id){ if(!(id in (server.lqadone||{}))) postState({kind:'lqadone',id:id,ts:lqaMap[id]}).catch(function(){}); });
+          Object.keys(tagSeen).forEach(function(id){ if(!(id in (server.tagseen||{}))) postState({kind:'tagseen',id:id,ts:tagSeen[id]}).catch(function(){}); });
+          applyState({ done: Object.assign({}, doneMap, server.done||{}), lqa: Object.assign({}, lqaDismiss, server.lqa||{}),
+                       trans: Object.assign({}, transMap, server.trans||{}), lqadone: Object.assign({}, lqaMap, server.lqadone||{}),
+                       tagseen: Object.assign({}, tagSeen, server.tagseen||{}), tagBaseline: server.tagBaseline });
         } else {
           applyState(server);
         }
@@ -462,12 +548,11 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   window.addEventListener('resize', setTopOffset);
 
   // First paint from the bundled snapshot (instant, works offline)…
-  reconcileDone();  // clear Done on cards that got an LQA handoff after being marked done
   reconcileLqa();   // bring back dismissed LQA tags if a newer LQA handoff arrived
   renderTabs();
   render();
   setTopOffset();
-  updateUpdated(window.__META__ && window.__META__.generatedAt);
+  updateUpdated((window.__META__ && window.__META__.generatedAt) || localStorage.getItem(MKEY));
   // …then check auth + pull live data if hosted (login gate when required; snapshot if offline).
   boot();
 })();

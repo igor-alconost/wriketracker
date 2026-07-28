@@ -313,7 +313,9 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   document.getElementById('rows').addEventListener('click', function(e){
     var x=e.target.closest('.pill.lqa .x'); if(!x) return;
     var p=x.closest('.pill.lqa[data-lqa-id]'); if(!p) return;
-    lqaDismiss[p.getAttribute('data-lqa-id')]=Date.now(); saveLqa(); render();
+    var id=p.getAttribute('data-lqa-id'), ts=Date.now();
+    lqaDismiss[id]=ts; saveLqa(); render();
+    syncWrite({ kind:'lqa', id:id, ts:ts });
   });
 
   // ---- "→ Sheet": push a card to its Google Sheet via the Apps Script web app ----
@@ -356,11 +358,12 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   });
   document.getElementById('rows').addEventListener('change', function(e){
     var box=e.target.closest('.chk'); if(!box) return;
-    var id=box.getAttribute('data-id');
-    if(box.checked) doneMap[id]=Date.now(); else delete doneMap[id];
+    var id=box.getAttribute('data-id'), ts=Date.now();
+    if(box.checked) doneMap[id]=ts; else delete doneMap[id];
     saveDone();
     box.closest('tr').classList.toggle('checked', box.checked);
     updateTitle(cards.filter(passes).length);
+    syncWrite(box.checked ? { kind:'done', id:id, ts:ts } : { kind:'done', id:id, remove:true });
   });
 
   // ---- data source: live API (/api/wrike-cards) when hosted, else bundled data.js ----
@@ -394,7 +397,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     fetch('/api/wrike-cards', { cache:'no-store', headers:{ 'x-access-key': pw } })
       .then(function(r){ if(r.status===401) throw new Error('Wrong password'); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
       .then(function(j){ if(j.error) throw new Error(j.error);
-        KEY=pw; localStorage.setItem('bt.key', KEY); signout.style.display=''; hideLogin(); applyCards(j.cards||[], j.generatedAt); })
+        KEY=pw; localStorage.setItem('bt.key', KEY); signout.style.display=''; hideLogin(); applyCards(j.cards||[], j.generatedAt); fetchState(); })
       .catch(function(err){ errEl.textContent = err.message || 'Sign-in failed'; })
       .then(function(){ btn.disabled=false; });
   });
@@ -405,11 +408,49 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     var prev = upd.textContent; upd.textContent = 'Loading from Wrike…';
     return fetch('/api/wrike-cards', { cache:'no-store', headers: authHeaders() })
       .then(function(r){ if (r.status===401){ showLogin(); throw new Error('__AUTH__'); } if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
-      .then(function(j){ if (j.error) throw new Error(j.error); signout.style.display = KEY ? '' : 'none'; applyCards(j.cards || [], j.generatedAt); })
+      .then(function(j){ if (j.error) throw new Error(j.error); signout.style.display = KEY ? '' : 'none'; applyCards(j.cards || [], j.generatedAt); fetchState(); })
       .catch(function(e){ if(String(e.message)!=='__AUTH__') upd.textContent = (prev && prev.indexOf('Updated')===0) ? prev : 'snapshot (offline)'; })
       .then(function(){ btn.disabled = false; btn.classList.remove('busy'); });
   }
   document.getElementById('refresh').addEventListener('click', loadFromApi);
+
+  // ---- shared Done / LQA state across all users (Vercel Postgres via /api/state) ----
+  var sharedOK = false, migrated = false;
+  function applyState(s){
+    if(!s) return;
+    doneMap = s.done || {}; lqaDismiss = s.lqaDismissed || {};
+    saveDone(); saveLqa();                 // keep the local cache mirrored
+    reconcileDone(); reconcileLqa();
+    render();
+  }
+  function postState(body){
+    return fetch('/api/state', { method:'POST', cache:'no-store',
+        headers: Object.assign({ 'Content-Type':'application/json' }, authHeaders()),
+        body: JSON.stringify(body) })
+      .then(function(r){ return r.ok ? r.json() : null; });
+  }
+  // optimistic local change already applied by the caller; this persists it + syncs from the server truth
+  function syncWrite(body){ postState(body).then(function(s){ if(s){ sharedOK=true; applyState(s); } }).catch(function(){}); }
+  function fetchState(){
+    return fetch('/api/state', { cache:'no-store', headers: authHeaders() })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(server){
+        if(!server) return; sharedOK = true;
+        if(!migrated){
+          migrated = true;
+          // one-time migration: push any local-only marks up so nothing already ticked here is lost
+          Object.keys(doneMap).forEach(function(id){ if(!(id in (server.done||{}))) postState({kind:'done',id:id,ts:doneMap[id]}).catch(function(){}); });
+          Object.keys(lqaDismiss).forEach(function(id){ if(!(id in (server.lqaDismissed||{}))) postState({kind:'lqa',id:id,ts:lqaDismiss[id]}).catch(function(){}); });
+          applyState({ done: Object.assign({}, doneMap, server.done||{}), lqaDismissed: Object.assign({}, lqaDismiss, server.lqaDismissed||{}) });
+        } else {
+          applyState(server);
+        }
+      })
+      .catch(function(){});
+  }
+  // pick up other users' changes without a manual refresh
+  setInterval(function(){ if(sharedOK) fetchState(); }, 25000);
+  window.addEventListener('focus', function(){ if(sharedOK) fetchState(); });
 
   function boot(){ loadFromApi(); } // 401 shows the password prompt; local/offline just shows data
 

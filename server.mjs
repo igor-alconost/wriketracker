@@ -36,6 +36,34 @@ http
       return
     }
 
+    // Shared Done / LQA state — local dev mirror of the Vercel Postgres-backed /api/state.
+    // Stored in a JSON file so it persists across restarts on this machine.
+    if (url.pathname === '/api/state') {
+      const auth = checkAuth(req.headers['x-access-key'])
+      if (!auth.ok) { res.writeHead(auth.code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: auth.error })); return }
+      const STATE_FILE = path.join(ROOT, '.state.json')
+      const readState = () => { try { return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')) } catch { return { done: {}, lqaDismissed: {} } } }
+      if (req.method === 'GET') {
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(readState())); return
+      }
+      if (req.method === 'POST') {
+        let raw = ''; req.on('data', (d) => { raw += d })
+        req.on('end', () => {
+          try {
+            const body = JSON.parse(raw || '{}')
+            const kind = body.kind === 'lqa' ? 'lqaDismissed' : body.kind === 'done' ? 'done' : null
+            if (!kind || !body.id) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'kind and id required' })); return }
+            const s = readState(); s.done = s.done || {}; s.lqaDismissed = s.lqaDismissed || {}
+            if (body.remove) delete s[kind][String(body.id)]; else s[kind][String(body.id)] = Number(body.ts) || Date.now()
+            fs.writeFileSync(STATE_FILE, JSON.stringify(s))
+            res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(s))
+          } catch (e) { res.writeHead(500, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: String(e.message || e) })) }
+        })
+        return
+      }
+      res.writeHead(405); res.end(); return
+    }
+
     if (url.pathname === '/api/refresh') {
       try {
         const result = await refreshData((m) => console.log('[refresh]', m))

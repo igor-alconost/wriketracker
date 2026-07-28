@@ -1,5 +1,8 @@
 {
   "private": true,
   "type": "module",
-  "name": "alconost-brief-tracker"
+  "name": "alconost-brief-tracker",
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4"
+  }
 }

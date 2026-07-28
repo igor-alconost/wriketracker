@@ -49,7 +49,7 @@ http
       return
     }
 
-    let file = url.pathname === '/' ? '/brief-tracker.html' : url.pathname
+    let file = url.pathname === '/' ? '/index.html' : url.pathname
     const full = path.join(ROOT, path.normalize(file).replace(/^(\.\.[/\\])+/, ''))
     fs.readFile(full, (err, data) => {
       if (err) { res.writeHead(404); res.end('Not found'); return }

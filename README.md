@@ -9,7 +9,7 @@ No framework, no build step, no dependencies.
 Two ways:
 
 - **Double-click `start.bat`** (recommended) — launches the local server and opens <http://localhost:5178>. Here the in-page **Refresh** button pulls live data from Wrike and reloads. Keep the little black window open while you use it; close it to stop. (Equivalent to running `node server.mjs`.)
-- **Double-click `brief-tracker.html`** — works offline from the last snapshot (`data.js`), but the Refresh button only reloads (no live pull).
+- **Double-click `index.html`** — works offline from the last snapshot (`data.js`), but the Refresh button only reloads (no live pull).
 
 ## Refresh the data from Wrike
 
@@ -26,13 +26,13 @@ Requires Node 18+ (uses global `fetch`). It's fast — **~5–8 seconds** — be
 3. pulls the account's recent comments and flags cards whose comments **tag Alpha** (`rel="KUAYQ3T3"`), or are an **LQA handoff** (tags Alpha + mentions `\bLQA\b` + authored by someone other than Alpha),
 4. resolves commenter names in one batch call and rewrites `data.js`.
 
-The token never touches the browser — only this Node script uses it. After it runs, just reload `brief-tracker.html`.
+The token never touches the browser — only this Node script uses it. After it runs, just reload `index.html`.
 
 **On the comment window:** Wrike's account-wide comments endpoint covers the **last 7 days**. To make sure an older tag/LQA note isn't lost, the script merges with the previous `data.js` — so once a card is tracked it stays tracked while it's active. Keep refreshing at least weekly and nothing slips through. (The shipped `data.js` seeds this, so you start complete.)
 
 ## Files
 
-- `brief-tracker.html` — the dashboard (HTML + CSS + vanilla JS, all inline)
+- `index.html` — the dashboard (HTML + CSS + vanilla JS, all inline)
 - `data.js` — the data snapshot (`window.__DATA__` + `window.__META__`)
 - `refresh.mjs` — pulls fresh data from Wrike into `data.js` (CLI or imported by the server)
 - `server.mjs` — serves the dashboard and powers the in-page Refresh button

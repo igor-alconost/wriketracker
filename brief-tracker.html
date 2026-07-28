@@ -332,39 +332,32 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     updateTitle(cards.filter(passes).length);
   });
 
-  // ---- "Updated" time + Refresh button ----
-  var meta = window.__META__ || {};
+  // ---- data source: live API (/api/wrike-cards) when hosted, else bundled data.js ----
   var upd = document.getElementById('updated');
-  if (meta.generatedAt) {
-    var g = new Date(meta.generatedAt);
-    upd.textContent = 'Updated ' + g.toLocaleString(undefined,{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
-  } else {
-    upd.textContent = 'snapshot';
+  function updateUpdated(generatedAt){
+    if (generatedAt) {
+      var g = new Date(generatedAt);
+      upd.textContent = 'Updated ' + g.toLocaleString(undefined,{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    } else { upd.textContent = 'snapshot'; }
   }
-
-  var btn = document.getElementById('refresh');
-  var served = location.protocol === 'http:' || location.protocol === 'https:';
-  btn.addEventListener('click', function(){
-    if (!served) {
-      // opened as a file — no server to reach. Re-run the fetch offline, then reload.
-      upd.textContent = 'run "node server.mjs" for live refresh — reloading…';
-      setTimeout(function(){ location.reload(); }, 900);
-      return;
-    }
+  function applyCards(newCards, generatedAt){
+    cards = newCards || [];
+    ips = Array.from(new Set(cards.map(ipOf))).sort();
+    reconcileDone(); reconcileLqa();
+    renderTabs(); render(); setTopOffset();
+    updateUpdated(generatedAt);
+  }
+  function loadFromApi(){
+    var btn = document.getElementById('refresh');
     btn.disabled = true; btn.classList.add('busy');
-    var prev = upd.textContent; upd.textContent = 'Refreshing from Wrike…';
-    fetch('/api/refresh')
-      .then(function(r){ return r.json(); })
-      .then(function(res){
-        if (!res.ok) throw new Error(res.error || 'refresh failed');
-        upd.textContent = 'Updated — ' + res.count + ' cards';
-        location.reload(); // pick up the freshly written data.js
-      })
-      .catch(function(err){
-        btn.disabled = false; btn.classList.remove('busy');
-        upd.textContent = 'Refresh failed: ' + err.message;
-      });
-  });
+    var prev = upd.textContent; upd.textContent = 'Loading from Wrike…';
+    return fetch('/api/wrike-cards', { cache:'no-store' })
+      .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+      .then(function(j){ if (j.error) throw new Error(j.error); applyCards(j.cards || [], j.generatedAt); })
+      .catch(function(){ upd.textContent = (prev && prev.indexOf('Updated')===0) ? prev : 'snapshot (offline)'; })
+      .then(function(){ btn.disabled = false; btn.classList.remove('busy'); });
+  }
+  document.getElementById('refresh').addEventListener('click', loadFromApi);
 
   // keep the sticky column headers docked right below the pinned top block
   function setTopOffset(){
@@ -373,11 +366,15 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   }
   window.addEventListener('resize', setTopOffset);
 
+  // First paint from the bundled snapshot (instant, works offline)…
   reconcileDone();  // clear Done on cards that got an LQA handoff after being marked done
   reconcileLqa();   // bring back dismissed LQA tags if a newer LQA handoff arrived
   renderTabs();
   render();
   setTopOffset();
+  updateUpdated(window.__META__ && window.__META__.generatedAt);
+  // …then pull live data if we're hosted (silently keeps the snapshot if offline).
+  loadFromApi();
 })();
 </script>
 </body></html>

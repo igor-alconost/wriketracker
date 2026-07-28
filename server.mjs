@@ -8,7 +8,8 @@ import http from 'node:http'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { refreshData } from './refresh.mjs'
+import { refreshData, readToken } from './refresh.mjs'
+import { buildCards } from './api/wrike-cards.js'
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const PORT = process.env.PORT || 5178
@@ -18,6 +19,20 @@ const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/cs
 http
   .createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost')
+
+    // Same endpoint the hosted (Vercel) app uses: returns live cards as JSON.
+    if (url.pathname === '/api/wrike-cards') {
+      try {
+        const data = await buildCards(readToken(), Number(process.env.LOOKBACK_DAYS || '30'))
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' })
+        res.end(JSON.stringify(data))
+      } catch (e) {
+        console.error(e)
+        res.writeHead(500, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({ error: String(e.message || e) }))
+      }
+      return
+    }
 
     if (url.pathname === '/api/refresh') {
       try {

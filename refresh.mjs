@@ -19,7 +19,7 @@ const FOLDER = 'IEAEUAE4I5H5Z5DR'
 const API = 'https://www.wrike.com/api/v4'
 const LQA = /\bLQA\b/i
 
-function readToken() {
+export function readToken() {
   // Prefer an env var (for hosting, e.g. Lovable secrets); fall back to ../wrike.env locally.
   if (process.env.WRIKE_TOKEN) return process.env.WRIKE_TOKEN.trim()
   const envPath = path.resolve(ROOT, '..', 'wrike.env')

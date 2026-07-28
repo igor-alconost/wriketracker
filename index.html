@@ -70,9 +70,9 @@ td.langs{max-width:260px;font-family:var(--mono);font-size:11.5px;color:var(--mu
 .pill{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;}
 .pill.master{background:var(--ok-bg);color:var(--ok);}
 .pill.brief{background:var(--brief-bg);color:var(--brief);}
-.pill.lqa{background:var(--lqa-bg);color:var(--lqa);cursor:pointer;}
+.pill.lqa{background:var(--lqa-bg);color:var(--lqa);cursor:default;}
 .pill.lqa::before{content:"●";font-size:8px;margin-right:4px;vertical-align:1px;}
-.pill.lqa .x{margin-left:6px;opacity:.55;font-weight:700;}
+.pill.lqa .x{margin-left:6px;opacity:.55;font-weight:700;cursor:pointer;}
 .pill.lqa:hover{filter:brightness(.96);}
 .pill.lqa:hover .x{opacity:1;}
 .chip-toggle{background:var(--surface);border:1.5px solid var(--lqa);color:var(--lqa);padding:8px 12px;border-radius:8px;
@@ -84,6 +84,13 @@ td.langs{max-width:260px;font-family:var(--mono);font-size:11.5px;color:var(--mu
 .chip-toggle.on .n{background:var(--lqa);}
 .mbadge{font-size:11px;font-weight:600;font-family:var(--mono);white-space:nowrap;}
 .mbadge.ok{color:var(--ok);} .mbadge.miss{color:var(--crit);} .mbadge.none{color:var(--faint);}
+.typecell .a-role{font-size:12.5px;font-weight:650;}
+.typecell .a-role.parent{color:var(--ok);}
+.typecell .a-role.child{color:var(--brief);}
+.typecell .a-stack{display:flex;flex-direction:column;gap:3px;}
+.typecell .a-line{display:flex;gap:7px;align-items:baseline;}
+.typecell .ref{font-family:var(--mono);font-size:11.5px;color:var(--muted);}
+.typecell .a-miss{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--crit);}
 .dl{white-space:nowrap;font-variant-numeric:tabular-nums;}
 .dl .rel{font-size:11px;font-weight:700;margin-left:7px;}
 .dl.overdue .rel{color:var(--crit);} .dl.soon .rel{color:var(--warn);} .dl.ok .rel{color:var(--ok);}
@@ -154,7 +161,6 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
           <th>Description</th>
           <th class="sortable" data-sort="language">Lang</th>
           <th>Type</th>
-          <th>Master card</th>
           <th class="sortable" data-sort="lqa">LQA</th>
           <th class="center">Done</th>
           <th class="center">Sheet</th>
@@ -250,11 +256,16 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   }
 
   function rowHtml(c){
-    var master = c.masterRef==null ? '<span class="mbadge none">—</span>'
-      : (c.masterExists ? '<span class="mbadge ok">'+esc(c.masterRef)+' ✓</span>'
-                        : '<span class="mbadge miss">'+esc(c.masterRef)+' ✕ missing</span>');
-    var role = c.role==='master card'
-      ? '<span class="pill master">master</span>' : '<span class="pill brief">brief</span>';
+    var isParent = c.role==='master card';
+    var roleWord = '<span class="a-role '+(isParent?'parent':'child')+'">'+(isParent?'Parent':'Child')+'</span>';
+    var typeInner;
+    if(c.masterRef==null){ typeInner = roleWord; }
+    else {
+      var refPart = c.masterExists
+        ? '<span class="ref">'+esc(c.masterRef)+'</span>'
+        : '<span class="a-line"><span class="ref">'+esc(c.masterRef)+'</span><span class="a-miss">missing</span></span>';
+      typeInner = '<div class="a-stack">'+roleWord+refPart+'</div>';
+    }
     var lqc = c.lqaComments&&c.lqaComments[0];
     var lqa = lqaVisible(c)
       ? '<span class="pill lqa" data-lqa-id="'+esc(c.id)+'" title="'+esc((lqc?lqc.author+' · '+fmtDate(lqc.date)+' · ':'')+(lqc?lqc.text:''))+' — click ✕ to dismiss">LQA<span class="x">✕</span></span>'
@@ -267,8 +278,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
       + '<td><a class="tk" href="'+esc(c.permalink)+'" target="_blank" rel="noreferrer">'+esc(c.ticket)+'</a>'+(c.isNew?'<span class="new-badge">NEW</span>':'')+'</td>'
       + '<td class="desc" title="'+esc(c.title)+'">'+esc(c.title)+'</td>'
       + '<td class="langs" title="'+esc(langs.join(', '))+'">'+langCell+'</td>'
-      + '<td>'+role+'</td>'
-      + '<td>'+master+'</td>'
+      + '<td class="typecell">'+typeInner+'</td>'
       + '<td>'+lqa+'</td>'
       + '<td class="center"><input class="chk" type="checkbox" data-id="'+esc(c.id)+'"'+(isc?' checked':'')+'/></td>'
       + '<td class="center"><button class="sheet-btn" data-sheet="'+esc(c.id)+'">→ Sheet</button></td>'
@@ -283,7 +293,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     updateTitle(list.length);
     document.getElementById('rows').innerHTML = list.length
       ? list.map(rowHtml).join('')
-      : '<tr><td colspan="8" class="empty">No cards match.</td></tr>';
+      : '<tr><td colspan="7" class="empty">No cards match.</td></tr>';
     Array.prototype.forEach.call(document.querySelectorAll('th.sortable'), function(th){
       var k=th.getAttribute('data-sort');
       var label = k==='isNew'?'Card':k==='language'?'Lang':k==='lqa'?'LQA':k;
@@ -301,7 +311,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   });
   // click the LQA pill's ✕ (or the pill) to dismiss it; remembered until a newer LQA comment
   document.getElementById('rows').addEventListener('click', function(e){
-    var p=e.target.closest('.pill.lqa[data-lqa-id]'); if(!p) return;
+    var x=e.target.closest('.pill.lqa .x'); if(!x) return;
+    var p=x.closest('.pill.lqa[data-lqa-id]'); if(!p) return;
     lqaDismiss[p.getAttribute('data-lqa-id')]=Date.now(); saveLqa(); render();
   });
 

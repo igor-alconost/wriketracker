@@ -62,6 +62,10 @@ const langCodes = (text) => {
 // language code from a card title's "…Localization_XX…" suffix (used across a group's siblings)
 const TITLELANG = /[Ll]ocali[sz]ation_([A-Za-z]{2,3}(?:-[A-Za-z]{2,4})?)/
 const titleCode = (title) => { const m = (title || '').match(TITLELANG); return m ? m[1].toUpperCase() : null }
+// The tagged brief comment sometimes states the real master code (the in-card field is often stale/wrong),
+// e.g. "Original Master project code is MPY-59379" (note: typos like "Originanal" appear). Prefer this.
+const MASTERCODE = /master\s*project\b[\s\S]{0,25}?\b([A-Z]{2,5}-\d{3,})/i
+const masterCodeFrom = (texts) => { for (const t of texts || []) { const m = stripHtml(t).match(MASTERCODE); if (m) return m[1].toUpperCase() } return null }
 // normalize Scopely's title codes to standard language codes
 const NORM = { GE: 'DE', SP: 'ES-ES', PT: 'PT-PT' }
 
@@ -236,25 +240,28 @@ export async function refreshData(log = () => {}) {
   log('Extracting languages…')
   const cards = []
   for (const { task, taggedAlpha, lqa, tagComments, lqaComments } of tracked) {
-    const mref = cf(task, 'Original Master Project')
     const title = task.title
-    const role = title.includes('Loc Collaboration') ? 'master card' : 'brief (de-facto master)'
-    // languages = the whole group's codes (siblings sharing the master ref; a master card's
-    // group is keyed by its own ticket), union any language list found in this card's
-    // comments, falling back to this card's own Language field.
-    const key = role === 'master card' ? ticket(title) : mref
+    const self = ticket(title)
+    // Fetch this card's comments once — used for language codes, brief strings, and the stated master code.
+    let fullComments = []
+    try { fullComments = (await api(`/tasks/${task.id}/comments`)).data } catch { /* keep going */ }
+    // Original content + stated master come from the brief comment(s) tagging Alpha (not authored by Alpha).
+    const briefTexts = fullComments
+      .filter((c) => c.authorId !== ALPHA && (c.text || '').includes(`rel="${ALPHA}"`))
+      .map((c) => c.text)
+    // Effective master ref: the code stated in the brief comment WINS over the (often stale/wrong) field.
+    // If it names this card's own ticket, the card is its own master → top-level parent (no ref).
+    let mref = masterCodeFrom(briefTexts) || cf(task, 'Original Master Project')
+    if (mref === self) mref = ''
+    // Role from the master ref, NOT the title: pointing at a parent = child; empty = top-level parent.
+    const role = mref ? 'brief (de-facto master)' : 'master card'
+    // languages = the whole group's codes (siblings sharing the master ref; a master card's group is
+    // keyed by its own ticket), union any language list in this card's comments, falling back to its field.
+    const key = role === 'master card' ? self : mref
     const raw = []
     for (const s of (key && byOMP[key]) || []) { const c = titleCode(s.title); if (c) raw.push(c) }
-    let strings = []
-    try {
-      const full = await api(`/tasks/${task.id}/comments`)
-      for (const c of full.data) for (const code of langCodes(stripHtml(c.text))) raw.push(code)
-      // Original content = strings from the brief comment(s) tagging Alpha (not by Alpha)
-      const briefTexts = full.data
-        .filter((c) => c.authorId !== ALPHA && (c.text || '').includes(`rel="${ALPHA}"`))
-        .map((c) => c.text)
-      strings = extractStrings(briefTexts)
-    } catch { /* keep going */ }
+    for (const c of fullComments) for (const code of langCodes(stripHtml(c.text))) raw.push(code)
+    const strings = extractStrings(briefTexts)
     const src = raw.length ? raw : langCodes(cf(task, 'Language'))
     const langs = []
     for (const x of src) { const y = NORM[x] || x; if (!langs.includes(y)) langs.push(y) }

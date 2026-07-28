@@ -15,6 +15,9 @@ const LANGS = new Set(('EN EN-US EN-AU EN-GB EN-CA FR FR-FR FR-CA DE ES ES-ES ES
 const NORM = { GE: 'DE', SP: 'ES-ES', PT: 'PT-PT' }
 const NAMECODE = /[A-Za-z][A-Za-z()./\- ]{1,22}?[-–]\s*([A-Z]{2,3}(?:-[A-Z]{2,3})?)\b/g
 const TITLELANG = /[Ll]ocali[sz]ation_([A-Za-z]{2,3}(?:-[A-Za-z]{2,4})?)/
+// The tagged brief comment sometimes states the real master code (the in-card field is often stale/wrong),
+// e.g. "Original Master project code is MPY-59379" (typos like "Originanal" occur). Prefer this over the field.
+const MASTERCODE = /master\s*project\b[\s\S]{0,25}?\b([A-Z]{2,5}-\d{3,})/i
 const STOP = /^(the original|original video|original master|\d+\s*l[na]*guages?|please|thank|let me know|cc:|note:?|http|visual reference|just one language)/i
 const ENUM = /^(?:op|option|opt|var|variant|line|#)?\s*\d+\s*[:.)\-]\s*(\S.*)$/i
 
@@ -31,6 +34,7 @@ function langCodes(text) {
   return out
 }
 const titleCode = (title) => { const m = (title || '').match(TITLELANG); return m ? m[1].toUpperCase() : null }
+const masterCodeFrom = (texts) => { for (const t of texts || []) { const m = stripHtml(t).match(MASTERCODE); if (m) return m[1].toUpperCase() } return null }
 function parseStrings(text) {
   const lis = [...(text || '').matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)].map((m) => cleanLine(m[1])).filter(Boolean)
   if (lis.length) return lis
@@ -116,10 +120,15 @@ export async function buildCards(token, lookbackDays) {
 
   const cards = []
   for (const { task, taggedAlpha, lqa, tagComments, lqaComments, briefTexts, commentTexts } of tracked) {
-    const mref = cf(task, 'Original Master Project')
     const title = task.title
-    const role = title.includes('Loc Collaboration') ? 'master card' : 'brief (de-facto master)'
-    const key = role === 'master card' ? ticket(title) : mref
+    const self = ticket(title)
+    // Effective master ref: the code stated in the brief comment WINS over the (often stale/wrong) field.
+    // If it names this card's own ticket, the card is its own master → top-level parent (no ref).
+    let mref = masterCodeFrom(briefTexts) || cf(task, 'Original Master Project')
+    if (mref === self) mref = ''
+    // Role from the master ref, NOT the title: pointing at a parent = child; empty = top-level parent.
+    const role = mref ? 'brief (de-facto master)' : 'master card'
+    const key = role === 'master card' ? self : mref
     const raw = []
     for (const s of (key && byOMP[key]) || []) { const c = titleCode(s.title); if (c) raw.push(c) }
     for (const text of commentTexts) for (const code of langCodes(stripHtml(text))) raw.push(code)

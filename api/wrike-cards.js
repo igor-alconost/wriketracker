@@ -141,23 +141,17 @@ export async function buildCards(token, lookbackDays) {
   return { generatedAt: new Date().toISOString(), cards }
 }
 
-// Verify the caller's Supabase session. Returns {ok} or {ok:false,code,error}.
-// If SUPABASE_URL isn't set, auth is disabled (local dev) and this passes.
-export async function checkAuth(authHeader) {
-  const supaUrl = process.env.SUPABASE_URL
-  if (!supaUrl) return { ok: true }
-  const jwt = String(authHeader || '').replace(/^Bearer\s+/i, '')
-  if (!jwt) return { ok: false, code: 401, error: 'Not signed in' }
-  try {
-    const u = await fetch(`${supaUrl}/auth/v1/user`, {
-      headers: { Authorization: 'Bearer ' + jwt, apikey: process.env.SUPABASE_ANON_KEY || '' },
-    })
-    return u.ok ? { ok: true } : { ok: false, code: 401, error: 'Invalid or expired session' }
-  } catch { return { ok: false, code: 401, error: 'Auth check failed' } }
+// Shared-password gate. Returns {ok} or {ok:false,code,error}.
+// If SITE_PASSWORD isn't set, auth is disabled (local dev) and this passes.
+export function checkAuth(providedKey) {
+  const pw = process.env.SITE_PASSWORD
+  if (!pw) return { ok: true }
+  if (providedKey && providedKey === pw) return { ok: true }
+  return { ok: false, code: 401, error: 'Wrong or missing password' }
 }
 
 export default async function handler(req, res) {
-  const auth = await checkAuth(req.headers['authorization'])
+  const auth = checkAuth(req.headers['x-access-key'])
   if (!auth.ok) { res.status(auth.code).json({ error: auth.error }); return }
   const token = process.env.WRIKE_TOKEN
   if (!token) { res.status(500).json({ error: 'WRIKE_TOKEN env var not set' }); return }

@@ -20,16 +20,9 @@ http
   .createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost')
 
-    // Public Supabase config for the login screen (mirrors /api/config on Vercel).
-    if (url.pathname === '/api/config') {
-      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' })
-      res.end(JSON.stringify({ supabaseUrl: process.env.SUPABASE_URL || '', supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '', authEnabled: !!process.env.SUPABASE_URL }))
-      return
-    }
-
     // Same endpoint the hosted (Vercel) app uses: returns live cards as JSON.
     if (url.pathname === '/api/wrike-cards') {
-      const auth = await checkAuth(req.headers['authorization'])
+      const auth = checkAuth(req.headers['x-access-key'])
       if (!auth.ok) { res.writeHead(auth.code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: auth.error })); return }
       try {
         const data = await buildCards(readToken(), Number(process.env.LOOKBACK_DAYS || '30'))

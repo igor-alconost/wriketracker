@@ -29,19 +29,21 @@ async function ensureTable(sql) {
     ts BIGINT NOT NULL,
     PRIMARY KEY (kind, card_id)
   )`
+  // val holds a text status (e.g. Translation/LQA dropdown); timestamp-only kinds leave it null
+  await sql`ALTER TABLE bt_state ADD COLUMN IF NOT EXISTS val TEXT`
   _ready = true
 }
 
-const KINDS = new Set(['done', 'lqa', 'trans', 'lqadone', 'tagseen', 'deleted'])
+const KINDS = new Set(['done', 'lqa', 'trans', 'lqadone', 'tagseen', 'deleted', 'crtasks', 'sheettab', 'linguists'])
 
 async function readAll(sql) {
-  const rows = await sql`SELECT kind, card_id, ts FROM bt_state`
-  const out = { done: {}, lqa: {}, trans: {}, lqadone: {}, tagseen: {}, deleted: {} }
+  const rows = await sql`SELECT kind, card_id, ts, val FROM bt_state`
+  const out = { done: {}, lqa: {}, trans: {}, lqadone: {}, tagseen: {}, deleted: {}, crtasks: {}, sheettab: {}, linguists: {} }
   let baseline = null
   for (const r of rows) {
     if (r.kind === 'meta') { if (r.card_id === 'tagBaseline') baseline = Number(r.ts); continue }
     if (!out[r.kind]) out[r.kind] = {}
-    out[r.kind][r.card_id] = Number(r.ts)
+    out[r.kind][r.card_id] = (r.val != null) ? r.val : Number(r.ts)
   }
   out.tagBaseline = baseline
   return out
@@ -70,8 +72,9 @@ export default async function handler(req, res) {
         await sql`DELETE FROM bt_state WHERE kind=${kind} AND card_id=${id}`
       } else {
         const ts = Number(body.ts) || Date.now()
-        await sql`INSERT INTO bt_state (kind, card_id, ts) VALUES (${kind}, ${id}, ${ts})
-                  ON CONFLICT (kind, card_id) DO UPDATE SET ts = EXCLUDED.ts`
+        const val = (body.val !== undefined && body.val !== null && body.val !== '') ? String(body.val) : null
+        await sql`INSERT INTO bt_state (kind, card_id, ts, val) VALUES (${kind}, ${id}, ${ts}, ${val})
+                  ON CONFLICT (kind, card_id) DO UPDATE SET ts = EXCLUDED.ts, val = EXCLUDED.val`
       }
       res.status(200).json(await readAll(sql))
       return

@@ -35,6 +35,11 @@ body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
 .wrap{max-width:1760px;margin:0 auto;padding:0 28px 60px;}
 .wrap--head{padding:0 28px;}
 .tabs{display:flex;gap:4px;padding:14px 0 0;flex-wrap:wrap;}
+.headrow{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;}
+.headrow-btns{display:flex;gap:8px;align-items:center;}
+.mini-link{background:var(--surface);border:1.5px solid var(--faint);color:var(--muted);font-size:11px;line-height:1;
+  padding:4px 9px;border-radius:7px;cursor:pointer;white-space:nowrap;margin-bottom:2px;}
+.mini-link:hover{color:var(--ink);border-color:var(--charcoal);}
 .tab{background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);padding:11px 15px;
   font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;transition:color .12s,background .12s;}
 .tab:hover{color:var(--ink);background:rgba(43,49,58,.04);border-radius:8px 8px 0 0;}
@@ -86,6 +91,9 @@ td.langs{max-width:260px;font-family:var(--mono);font-size:11.5px;color:var(--mu
 .mbadge{font-size:11px;font-weight:600;font-family:var(--mono);white-space:nowrap;}
 .mbadge.ok{color:var(--ok);} .mbadge.miss{color:var(--crit);} .mbadge.none{color:var(--faint);}
 .thsub{font-weight:600;opacity:.65;text-transform:none;letter-spacing:0;}
+.cardcell{display:flex;align-items:center;}
+.msgslot{margin-left:auto;width:58px;flex:none;display:flex;justify-content:flex-end;align-items:center;}
+.cardcell .msgchip{margin-left:0;}
 .msgchip{display:inline-flex;align-items:center;gap:6px;margin-left:8px;padding:2px 9px;border-radius:999px;background:#fbe1bd;border:1.5px solid var(--lqa);vertical-align:middle;}
 .msgchip .msg-open{cursor:pointer;font-size:15px;line-height:1;}
 .msgchip .msg-x{cursor:pointer;font-size:11px;font-weight:800;color:#b96f16;opacity:.85;line-height:1;}
@@ -101,42 +109,163 @@ td.langs{max-width:260px;font-family:var(--mono);font-size:11.5px;color:var(--mu
 .modal-x{background:none;border:none;font-size:16px;cursor:pointer;color:var(--muted);line-height:1;padding:2px 4px;}
 .modal-x:hover{color:var(--ink);}
 .modal-body{padding:6px 18px 16px;overflow:auto;}
+.modal-card--wide{max-width:520px;}
+.ling-hint{font-size:12px;color:var(--muted);margin:6px 0 12px;}
+#lingpop .modal-head{border-bottom:none;}
+.ling-table{border-collapse:collapse;table-layout:fixed;width:472px;min-width:0;font-size:12px;margin:0 auto;}
+.ling-table th,.ling-table td{border:1px solid var(--hair);padding:3px 5px;text-align:left;overflow:hidden;}
+.ling-table th:first-child{width:64px;}
+.ling-table th:not(:first-child){width:136px;}
+.ling-table thead th{background:var(--hair2);font-weight:700;color:var(--ink);text-transform:capitalize;position:sticky;top:0;font-size:11px;}
+.ling-code{background:var(--hair2);font-weight:700;white-space:nowrap;}
+.ling-inp{width:100%;box-sizing:border-box;border:1px solid transparent;background:transparent;font:inherit;font-size:12px;color:var(--ink);padding:2px 4px;border-radius:4px;}
+.ling-inp:hover{border-color:var(--hair);}
+.ling-inp:focus{outline:none;border-color:var(--link);background:var(--surface);}
+.ling-foot{display:flex;justify-content:flex-end;padding-top:12px;position:sticky;bottom:0;background:var(--surface);}
+.ling-save{background:var(--link);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-weight:600;cursor:pointer;}
+.ling-save:hover{filter:brightness(1.05);}
 .msgitem{padding:12px 0;border-bottom:1px solid var(--hair2);}
 .msgitem:last-child{border-bottom:none;}
 .msgmeta{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:5px;}
 .msgtext{font-size:13px;color:var(--ink);white-space:pre-wrap;line-height:1.55;}
+.sheet-list{display:flex;flex-direction:column;gap:7px;margin:8px 0 18px;}
+.sheet-row{display:flex;align-items:center;gap:6px;}
+.sheet-pick{flex:1;text-align:left;background:var(--surface);border:1px solid var(--hair);border-radius:8px;padding:11px 13px;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--ink);}
+.sheet-pick:hover{filter:brightness(.95);}
+.sheet-del{background:none;border:none;cursor:pointer;color:var(--faint);font-size:12px;padding:6px 6px;line-height:1;}
+.sheet-del:hover{color:var(--crit);}
+.sheet-empty{color:var(--muted);font-size:13px;padding:6px 0 16px;}
+.sheet-add{border-top:1px solid var(--hair);padding-top:14px;display:flex;flex-direction:column;gap:8px;}
+.sheet-add-head{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);}
+.sheet-add input{padding:9px 11px;border:1px solid var(--hair);border-radius:8px;font:inherit;font-size:13px;background:var(--surface);color:var(--ink);}
+.sheet-add input:focus{outline:none;border-color:var(--link);}
+.sheet-add button{align-self:flex-start;background:var(--header);color:var(--header-ink);border:none;border-radius:8px;padding:9px 15px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;}
+.sheet-add button:hover{filter:brightness(1.12);}
+.sheet-foot{margin-top:12px;}
+.linklike{background:none;border:none;color:var(--link);font:inherit;font-size:12px;cursor:pointer;padding:0;text-decoration:underline;}
+.linklike:hover{color:var(--accent);}
+.typewrap{display:flex;align-items:center;}
+.descwrap{display:flex;align-items:center;gap:8px;min-width:0;}
+.descwrap .loc-btn{margin:0;flex-shrink:0;width:26px;padding:1px 0;text-align:center;box-sizing:border-box;}
+.descwrap .loc-spacer{display:inline-block;width:26px;flex-shrink:0;}
+.descwrap .desctext{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
 .typecell .a-role{font-size:12.5px;font-weight:650;}
 .typecell .a-role.parent{color:var(--ok);}
 .typecell .a-role.child{color:var(--brief);}
 .typecell .a-stack{display:flex;flex-direction:column;gap:3px;}
 .typecell .a-line{display:flex;gap:7px;align-items:baseline;}
-.typecell .ref{font-family:var(--mono);font-size:11.5px;color:var(--muted);}
+.typecell .ref{font-family:var(--mono);font-size:10.5px;color:var(--muted);}
 .typecell .a-miss{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--crit);}
 .dl{white-space:nowrap;font-variant-numeric:tabular-nums;}
 .dl .rel{font-size:11px;font-weight:700;margin-left:7px;}
 .dl.overdue .rel{color:var(--crit);} .dl.soon .rel{color:var(--warn);} .dl.ok .rel{color:var(--ok);}
 .chk{width:18px;height:18px;cursor:pointer;accent-color:var(--ok);}
-.sheet-btn{background:var(--surface);border:1px solid var(--hair);color:var(--muted);font-family:var(--sans);
-  font-size:12px;font-weight:600;padding:5px 10px;border-radius:7px;cursor:pointer;white-space:nowrap;transition:.12s;}
-.sheet-btn:hover{border-color:var(--ok);color:var(--ok);}
-.sheet-btn:disabled{opacity:.5;cursor:progress;}
+.exportcell{white-space:nowrap;}
+.automate-btn{background:var(--surface);border:1.5px solid var(--faint);color:var(--muted);border-radius:7px;padding:5px 12px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.automate-btn:hover{border-color:var(--charcoal);color:var(--ink);}
+.auto-actions{display:flex;flex-direction:column;gap:10px;padding:8px 0 4px;}
+.modal-card--auto{max-width:920px;}
+.modal-card--auto .modal-body{padding:12px 26px 24px;}
+.auto-cols{display:flex;gap:0;align-items:stretch;padding:10px 0 6px;}
+.auto-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px;padding:0 22px;}
+.auto-col:first-child{padding-left:0;}
+.auto-col:last-child{padding-right:0;}
+.auto-col+.auto-col{border-left:1px solid var(--hair);}
+.auto-group{font-size:14px;font-weight:800;letter-spacing:.02em;color:var(--ink);margin:0 0 10px;padding-bottom:7px;border-bottom:2px solid var(--hair);}
+.auto-step{display:flex;align-items:center;gap:8px;width:100%;min-height:64px;margin:0;padding:16px 18px;font:inherit;font-size:14px;font-weight:700;line-height:1.3;text-align:left;border:none;border-radius:14px;background:var(--hair2);color:var(--ink);cursor:pointer;box-shadow:0 1px 2px rgba(40,44,50,.06);transition:transform .12s ease,box-shadow .18s ease,filter .18s ease;}
+.auto-step:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 20px rgba(40,44,50,.17);filter:saturate(1.06);}
+.auto-step:active:not(:disabled){transform:translateY(0);box-shadow:none;}
+.auto-step:disabled{opacity:.45;cursor:not-allowed;}
+/* each section its own colour: header + soft (top) & solid (bottom) buttons in that hue */
+.grp-sheet .auto-group{color:#15803d;border-bottom-color:#15803d;}
+.grp-crowdin .auto-group{color:#6d28d9;border-bottom-color:#6d28d9;}
+.grp-lqa .auto-group{color:#a84018;border-bottom-color:#a84018;}
+.auto-step[data-act="sheet"]{background:#e9f7ef;color:#2b7a49;}
+.auto-step[data-act="import"]{background:#bfe8d0;color:#1c5e37;}
+.auto-step[data-act="import"]:not(:disabled){animation:autopulse 2.2s ease-in-out infinite;}
+.auto-step[data-act="import"]:hover:not(:disabled){animation:none;}
+@keyframes autopulse{0%,100%{box-shadow:0 1px 2px rgba(40,44,50,.06);}50%{box-shadow:0 0 0 5px rgba(38,140,80,.28);}}
+.auto-step[data-act="file"]{background:#f2edfd;color:#6a2fd0;}
+.auto-step[data-act="tasks"]{background:#dbcdf8;color:#5620ad;}
+.auto-step[data-act="lqa-report"]{background:#fbeee2;color:#a24d1c;}
+.auto-step[data-act="lqa-alphas"]{background:#f5d9c2;color:#8a3a16;}
+.auto-hint{font-size:11.5px;color:var(--muted);margin-top:-2px;}
+.auto-link{display:inline-block;font-size:12px;font-weight:600;color:var(--link);text-decoration:none;margin:-2px 0 2px;}
+.auto-link:hover{text-decoration:underline;}
+.mgr-list{display:flex;gap:14px;padding:16px 4px 10px;}
+.mgr-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:10px;background:var(--surface);border:1.5px solid var(--hair);border-radius:14px;padding:22px 14px 18px;font:inherit;cursor:pointer;position:relative;transition:transform .1s ease,box-shadow .16s ease,border-color .16s ease;}
+.mgr-item:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(40,44,50,.14);border-color:var(--link);}
+.mgr-item.is-last{border-color:var(--link);}
+.mgr-av{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;background:var(--brief-bg);color:var(--link);}
+.mgr-item:nth-child(1) .mgr-av{background:#e9f0fa;color:#3e6fb0;}
+.mgr-item:nth-child(2) .mgr-av{background:#e7f4ec;color:#2f9e59;}
+.mgr-name{font-size:15px;font-weight:700;color:var(--ink);text-transform:capitalize;}
+.mgr-last{position:absolute;top:8px;right:8px;font-size:8.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--link);background:var(--brief-bg);padding:2px 6px;border-radius:5px;}
+.att-list{display:flex;flex-direction:column;gap:8px;padding:6px 0;}
+.att-item{display:flex;flex-direction:column;gap:2px;text-align:left;background:var(--surface);border:1px solid var(--hair);border-radius:8px;padding:9px 12px;cursor:pointer;font:inherit;}
+.att-item:hover{border-color:var(--link);background:var(--brief-bg);}
+.att-name{font-weight:600;color:var(--ink);font-size:13px;word-break:break-all;}
+.att-meta{font-size:11px;color:var(--muted);}
+.att-latest{background:var(--lqa);color:#fff;font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:1px 5px;border-radius:4px;margin-left:6px;}
+.tk-subhead{font-size:11.5px;margin:8px 0 4px;word-break:break-all;}
+.tk-row.muted{color:var(--muted);}
 .del-btn{background:none;border:none;cursor:pointer;font-size:17px;opacity:.7;padding:2px 4px;line-height:1;}
 .del-btn:hover{opacity:1;}
-.exp,.exp-spacer{display:inline-block;width:14px;margin-right:5px;text-align:center;vertical-align:middle;}
-.exp{background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;line-height:1;padding:0;}
+.statsel{font:inherit;font-size:12px;font-weight:600;padding:3px 5px;border:1px solid var(--hair);border-radius:6px;background:var(--surface);cursor:pointer;}
+.statsel-none{color:var(--faint);font-weight:400;}
+.statsel-sent{color:var(--brief);border-color:var(--brief);background:var(--brief-bg);}
+.statsel-inprogress{color:var(--lqa);border-color:var(--lqa);background:var(--lqa-bg);}
+.statsel-tr_inprogress,.statsel-pr_inprogress{color:var(--lqa);border-color:var(--lqa);background:var(--lqa-bg);}
+.statsel-tr_done,.statsel-pr_done{color:var(--brief);border-color:var(--brief);background:var(--brief-bg);}
+.statsel-done{color:var(--ok);border-color:var(--ok);background:var(--ok-bg);}
+.exp,.exp-spacer{display:inline-block;width:16px;margin-right:6px;text-align:center;vertical-align:middle;}
+.exp{background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;line-height:1;padding:0;}
 .exp:hover{color:var(--ink);}
+.loc-btn{background:none;border:1px solid var(--hair);border-radius:6px;cursor:pointer;font-size:13px;color:var(--link);padding:1px 6px;margin-left:8px;vertical-align:middle;line-height:1.2;}
+.loc-btn:hover{border-color:var(--link);background:var(--brief-bg);}
 tr.detail td{background:var(--hair2);padding:10px 16px 13px;}
 .detail-head{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px;}
 .detail-n{color:var(--faint);}
-.loc-list{display:flex;flex-wrap:wrap;gap:6px;}
+.loc-actions{display:flex;justify-content:flex-end;margin:2px 0 10px;}
+.loc-copyall{background:var(--brief-bg);border:1px solid var(--link);color:var(--link);border-radius:7px;padding:6px 12px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.loc-copyall:hover{background:var(--surface);}
+.modal-card--loc{max-width:440px;}
+.loc-list{display:flex;flex-direction:column;gap:7px;}
+.loc-list .loc-item{justify-content:flex-start;gap:9px;padding:7px 11px;font-size:13.5px;}
+.loc-list .loc-lang{font-size:13.5px;}
+.loc-list .loc-tk{font-size:12px;}
 .loc-item{display:inline-flex;align-items:center;gap:6px;font-size:12px;text-decoration:none;color:var(--link);background:var(--surface);border:1px solid var(--hair);border-radius:6px;padding:3px 9px;}
 .loc-item:hover{border-color:var(--link);}
 .loc-lang{font-weight:600;}
 .loc-tk{font-family:var(--mono);font-size:11px;color:var(--muted);}
+.loc-vest{font-size:10px;font-weight:800;letter-spacing:.02em;padding:2px 6px;border-radius:5px;margin-left:2px;white-space:nowrap;}
+.loc-vest.yes{background:var(--ok-bg,#e4f4ea);color:var(--ok,#2e7d46);}
+.loc-vest.no{background:var(--crit-bg,#fde8e6);color:var(--crit,#c0392b);}
 .loc-open{font-size:11px;color:var(--faint);}
 .loc-item.self{border-color:var(--accent);background:var(--crit-bg);}
 .loc-item.self .loc-lang{color:var(--accent);}
 .loc-item.self .loc-open{color:var(--accent);font-weight:600;}
+tr.detail .tk-refresh{background:none;border:1px solid var(--hair);border-radius:6px;color:var(--muted);font:inherit;font-size:10px;cursor:pointer;padding:2px 7px;margin-left:8px;text-transform:none;letter-spacing:0;}
+tr.detail .tk-refresh:hover{color:var(--ink);border-color:var(--link);}
+.tk-list{display:flex;flex-direction:column;gap:5px;max-width:640px;}
+.tk-row{display:flex;align-items:center;gap:10px;font-size:12.5px;}
+.tk-lang{font-weight:700;min-width:56px;color:var(--ink);}
+.tk-batch{font-size:10px;font-weight:600;color:var(--lqa);background:var(--lqa-bg);border:1px solid var(--lqa);border-radius:5px;padding:1px 5px;white-space:nowrap;}
+.tk-skip{font-size:10px;font-weight:600;color:var(--muted);background:var(--hair2);border:1px solid var(--hair);border-radius:5px;padding:1px 5px;white-space:nowrap;}
+.tk-prog{display:flex;align-items:center;gap:7px;min-width:130px;}
+.tk-bar{display:inline-block;width:80px;height:7px;border-radius:4px;background:var(--hair);overflow:hidden;}
+.tk-bar>span{display:block;height:100%;background:var(--ok);}
+.tk-pct{font-family:var(--mono);font-size:11px;color:var(--muted);min-width:34px;}
+.tk-open{color:var(--link);text-decoration:none;font-size:12px;}
+.tk-open:hover{text-decoration:underline;}
+.tk-copy{background:var(--surface);border:1px solid var(--hair);border-radius:6px;color:var(--muted);font:inherit;font-size:11px;cursor:pointer;padding:2px 8px;}
+.tk-copy:hover{border-color:var(--link);color:var(--link);}
+.tk-err .tk-msg{color:var(--crit);font-size:11px;}
+.tk-empty{color:var(--muted);font-size:12px;}
+.tk-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;}
+.tk-done{background:var(--ok);color:#fff;border:none;border-radius:8px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;padding:8px 14px;}
+.tk-done:hover{filter:brightness(1.08);}
+.tk-done:disabled{opacity:.6;cursor:progress;}
 .login{position:fixed;inset:0;background:var(--header);display:flex;align-items:center;justify-content:center;z-index:1000;}
 .login__box{background:var(--surface);border-radius:14px;padding:28px;width:320px;max-width:90vw;display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 60px rgba(0,0,0,.35);}
 .login__title{font-size:20px;font-weight:700;color:var(--ink);}
@@ -180,7 +309,13 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
 </div>
 <div class="topfixed">
 <div class="wrap wrap--head">
-  <div class="tabs" id="tabs"></div>
+  <div class="headrow">
+    <div class="tabs" id="tabs"></div>
+    <div class="headrow-btns">
+      <button id="lingBtn" class="mini-link" type="button" title="Edit the preferred linguists table (per language / stage)">👤 Linguists</button>
+      <button id="sheetUrlBtn" class="mini-link" type="button" title="Set / change the Apps Script web-app URL">⚙ Apps Script URL</button>
+    </div>
+  </div>
   <div class="panel__head">
     <div class="panel__title" id="paneltitle"></div>
     <div style="display:flex;gap:10px;align-items:center;">
@@ -198,12 +333,12 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
           <th class="sortable" data-sort="isNew">Card</th>
           <th>Description</th>
           <th class="sortable" data-sort="language">Lang</th>
-          <th>Type</th>
+          <th>Tickets</th>
           <th class="sortable" data-sort="lqa">LQA ready</th>
           <th class="center">Translation<br><span class="thsub">(proofread)</span></th>
           <th class="center">LQA</th>
           <th class="center">Done</th>
-          <th class="center">Sheet</th>
+          <th class="center">Workflow</th>
           <th class="center"></th>
         </tr></thead>
         <tbody id="rows"></tbody>
@@ -218,6 +353,53 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     <div class="modal-body" id="msgpopBody"></div>
   </div>
 </div>
+<div class="modal" id="sheetpop" style="display:none">
+  <div class="modal-card">
+    <div class="modal-head"><b id="sheetpopTitle">Send to spreadsheet</b><button class="modal-x" id="sheetpopClose" title="Close">✕</button></div>
+    <div class="modal-body">
+      <div class="sheet-list" id="sheetList"></div>
+      <div class="sheet-add">
+        <div class="sheet-add-head">Add a spreadsheet</div>
+        <input id="sheetName" placeholder="Name (e.g. New Game translations)"/>
+        <input id="sheetUrl" placeholder="Google Sheets URL or ID"/>
+        <button id="sheetAdd">Add spreadsheet</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal" id="locpop" style="display:none">
+  <div class="modal-card modal-card--loc">
+    <div class="modal-head"><b id="locpopTitle">Localization cards</b><button class="modal-x" id="locpopClose" title="Close">✕</button></div>
+    <div class="modal-body" id="locpopBody"></div>
+  </div>
+</div>
+<div class="modal" id="autopop" style="display:none">
+  <div class="modal-card modal-card--auto">
+    <div class="modal-head"><b id="autopopTitle">Automate</b><button class="modal-x" id="autopopClose" title="Close">✕</button></div>
+    <div class="modal-body" id="autopopBody"></div>
+  </div>
+</div>
+<div class="modal" id="mgrpop" style="display:none">
+  <div class="modal-card">
+    <div class="modal-head"><b>Create alphas as…</b><button class="modal-x" id="mgrClose" title="Close">✕</button></div>
+    <div class="modal-body" id="mgrBody"></div>
+  </div>
+</div>
+<div class="modal" id="attpop" style="display:none">
+  <div class="modal-card">
+    <div class="modal-head"><b id="attpopTitle">Attach source to Drive</b><button class="modal-x" id="attpopClose" title="Close">✕</button></div>
+    <div class="modal-body" id="attpopBody"></div>
+  </div>
+</div>
+<div class="modal" id="lingpop" style="display:none">
+  <div class="modal-card modal-card--wide">
+    <div class="modal-head"><b>Preferred linguists</b><button class="modal-x" id="lingClose" title="Close">✕</button></div>
+    <div class="modal-body">
+      <div id="lingBody"></div>
+      <div class="ling-foot"><button id="lingSave" class="ling-save">Save</button></div>
+    </div>
+  </div>
+</div>
 <script src="data.js"></script>
 <script>
 (function(){
@@ -227,11 +409,18 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   var cards = window.__DATA__ || safeParse(localStorage.getItem(CKEY)) || [];
   var DAY = 86400000;
   var state = { tab:'all', sort:'due', dir:1, lqaOnly:false };
-  var expanded = {};  // cardId -> true when its localization cards are shown
+  var expandedTasks = {};   // cardId -> true when its Crowdin-tasks panel is open
+  var crtasksMap = {};      // cardId -> { fileId, folder, translate:[], proof:[], proofDesired, phase } (shared)
+  var progressMap = {};     // crowdin taskId -> percent
 
   // "Done" is stored per card as the timestamp (ms) when it was checked, so a later
   // LQA handoff can auto-clear it. { cardId: doneAtMs }
   var DKEY = 'briefTracker.done';
+  var linguists = {};        // CODE -> { translation, proofreading, lqa } execIds (shared, editable)
+  var crFilesMap = {};       // cardId -> [{fileId,name,title,url}] Crowdin files (from load index scan)
+  var crFileProg = {};       // cardId -> [{...file with langs/overall progress}] (loaded on expand)
+  var LSTAGES = ['translation','proofreading','lqa'];
+  var LCODES = ['JP','CHT','CHS','AR','FR-FR','ES-ES','ES-MX','PT-PT','PT-BR','DE','IT','KO','NL','PL','TR'];
   var doneMap = {};
   try { doneMap = JSON.parse(localStorage.getItem(DKEY) || '{}') || {}; } catch(e){ doneMap = {}; }
   // migrate the old boolean set (briefTracker.checked) → timestamped map
@@ -248,6 +437,12 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   }
   function isDone(c){ return c.id in doneMap; }
   function doneCount(){ return Object.keys(doneMap).length; }
+  // auto-uncheck Done when a newer tagged (Alpha) comment arrives after it was marked done
+  function reconcileDone(){
+    var changed=false;
+    cards.forEach(function(c){ if((c.id in doneMap) && latestTagTs(c) > doneMap[c.id]){ delete doneMap[c.id]; changed=true; } });
+    if(changed) saveDone();
+  }
 
   // "Translation (proofread)" and "LQA" — plain per-card checkboxes, shared across users.
   var TKEY = 'briefTracker.trans', QKEY = 'briefTracker.lqadone';
@@ -258,6 +453,9 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   function saveLqaDone(){ localStorage.setItem(QKEY, JSON.stringify(lqaMap)); }
   function isTrans(c){ return c.id in transMap; }
   function isLqaDone(c){ return c.id in lqaMap; }
+  // Translation / LQA status dropdown options
+  var STATUS = [['','—'],['inprogress','In progress'],['done','Done']];
+  var TRANS_STATUS = [['','—'],['tr_inprogress','TR IN PROGRESS'],['tr_done','TR DONE'],['pr_inprogress','PR IN PROGRESS'],['pr_done','PR DONE'],['done','DONE']];
 
   // "New tagged message" mark — shows when a card's newest Alpha-tagged comment is newer than the
   // shared baseline (tracking start) or the last time anyone cleared it. Clearing is shared; a still-
@@ -329,15 +527,18 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     });
   }
 
+  // Does this card have any real Crowdin tasks (in either phase)? A file can exist with none.
+  function hasCrTasks(c){ var d=crtasksMap[c.id]; if(!d) return false;
+    return (d.translate||[]).some(function(t){return t.taskId;}) || (d.proof||[]).some(function(t){return t.taskId;}); }
+  // Crowdin source files found for this card (from the on-load index scan).
+  function hasCrFiles(c){ return !!(crFilesMap[c.id] && crFilesMap[c.id].length); }
   function rowHtml(c){
     var isParent = c.role==='master card';
     var roleWord = '<span class="a-role '+(isParent?'parent':'child')+'">'+(isParent?'Parent':'Child')+'</span>';
     var typeInner;
     if(c.masterRef==null){ typeInner = roleWord; }
     else {
-      var refPart = c.masterExists
-        ? '<span class="ref">'+esc(c.masterRef)+'</span>'
-        : '<span class="a-line"><span class="ref">'+esc(c.masterRef)+'</span><span class="a-miss">missing</span></span>';
+      var refPart = '<span class="ref">'+esc(c.masterRef)+'</span>';
       typeInner = '<div class="a-stack">'+roleWord+refPart+'</div>';
     }
     var lqc = c.lqaComments&&c.lqaComments[0];
@@ -349,42 +550,62 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     var isc = isDone(c);
     var cls = ((isc?'checked ':'')+(c.isNew?'isnew':'')).trim();
     function chk(kind, on){ return '<td class="center"><input class="chk" type="checkbox" data-kind="'+kind+'" data-id="'+esc(c.id)+'"'+(on?' checked':'')+'/></td>'; }
+    function statusSel(kind, val){
+      var list = (kind==='trans') ? TRANS_STATUS : STATUS;
+      var v=val||'';
+      var opts=list.map(function(o){ return '<option value="'+o[0]+'"'+(v===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('');
+      return '<td class="center"><select class="statsel statsel-'+(v||'none')+'" data-kind="'+kind+'" data-id="'+esc(c.id)+'">'+opts+'</select></td>';
+    }
     var hasRel = c.related && c.related.items && c.related.items.length;
+    var hasTasks = hasCrTasks(c) || hasCrFiles(c);
     return '<tr class="'+cls+'">'
-      + '<td>'
-        + (hasRel?'<button class="exp" data-exp="'+esc(c.id)+'" title="Show localization cards">'+(expanded[c.id]?'▾':'▸')+'</button>':'<span class="exp-spacer"></span>')
+      + '<td><div class="cardcell">'
+        + (hasTasks?'<button class="exp" data-tasks="'+esc(c.id)+'" title="Show Crowdin tasks">'+(expandedTasks[c.id]?'▾':'▸')+'</button>':'<span class="exp-spacer"></span>')
         + '<a class="tk" href="'+esc(c.permalink)+'" target="_blank" rel="noreferrer">'+esc(c.ticket)+'</a>'
-        + (newTag(c)?'<span class="msgchip"><span class="msg-open" data-msg-id="'+esc(c.id)+'" title="Read the new tagged message">💬</span><span class="msg-x" data-msg-clear="'+esc(c.id)+'" title="Clear for everyone">✕</span></span>':'')
-        + (c.isNew?'<span class="new-badge">NEW</span>':'')+'</td>'
-      + '<td class="desc" title="'+esc(c.title)+'">'+esc(c.title)+'</td>'
+        + (c.isNew?'<span class="new-badge">NEW</span>':'')
+        + '<span class="msgslot">'+(newTag(c)?'<span class="msgchip"><span class="msg-open" data-msg-id="'+esc(c.id)+'" title="Read the new tagged message">💬</span><span class="msg-x" data-msg-clear="'+esc(c.id)+'" title="Clear for everyone">✕</span></span>':'')+'</span>'
+        + '</div></td>'
+      + '<td class="desc" title="'+esc(c.title)+'"><div class="descwrap">'+(hasRel?'<button class="loc-btn" data-loc="'+esc(c.id)+'" title="Localization cards">≡</button>':'<span class="loc-spacer"></span>')+'<span class="desctext">'+esc(c.title)+'</span></div></td>'
       + '<td class="langs" title="'+esc(langs.join(', '))+'">'+langCell+'</td>'
-      + '<td class="typecell">'+typeInner+'</td>'
+      + '<td class="typecell"><div class="typewrap">'+typeInner+'</div></td>'
       + '<td>'+lqa+'</td>'
-      + chk('trans', isTrans(c))
-      + chk('lqadone', isLqaDone(c))
+      + statusSel('trans', transMap[c.id])
+      + statusSel('lqadone', lqaMap[c.id])
       + chk('done', isc)
-      + '<td class="center"><button class="sheet-btn" data-sheet="'+esc(c.id)+'">→ Sheet</button></td>'
+      + '<td class="center exportcell"><button class="automate-btn" data-automate="'+esc(c.id)+'">⚙ Automate</button></td>'
       + '<td class="center"><button class="del-btn" data-del="'+esc(c.id)+'" title="Delete this row (comes back if a new tagged comment arrives)">🗑</button></td>'
       + '</tr>';
   }
-  function detailHtml(c){
-    var r = c.related || { items:[] };
-    var head = r.type==='siblings'
-      ? ('Sibling localization cards' + (r.parent?(' under '+esc(r.parent)):''))
-      : 'Localization cards';
+  function openLocModal(id){
+    var c=cards.filter(function(x){return x.id===id;})[0]; if(!c) return;
+    var r=c.related||{items:[]};
+    var mainTk = (r.type==='siblings' && r.parent) ? r.parent : c.ticket;   // the main/master ticket
+    function vestBadge(i){ return i.vest
+      ? '<span class="loc-vest yes" title="Vendor Estimate">VE: '+esc(String(i.vest))+'</span>'
+      : '<span class="loc-vest no" title="Vendor Estimate is empty">VE ✗</span>'; }
     var chips = r.items.map(function(i){
       if(i.self){
         return '<a class="loc-item self" href="'+esc(i.url)+'" target="_blank" rel="noreferrer">'
-          + (i.lang?'<span class="loc-lang">'+esc(i.lang)+'</span>':'')
-          + '<span class="loc-open">this card</span></a>';
+          + (i.lang?'<span class="loc-lang">'+esc(i.lang)+'</span>':'')+'<span class="loc-open">this card</span>'+vestBadge(i)+'</a>';
       }
       return '<a class="loc-item" href="'+esc(i.url)+'" target="_blank" rel="noreferrer">'
         + '<span class="loc-lang">'+esc(i.lang||'?')+'</span>'
-        + (i.ticket?'<span class="loc-tk">'+esc(i.ticket)+'</span>':'<span class="loc-open">open ↗</span>')
-        + '</a>';
+        + (i.ticket?'<span class="loc-tk">'+esc(i.ticket)+'</span>':'<span class="loc-open">open ↗</span>')+vestBadge(i)+'</a>';
     }).join('');
-    return '<tr class="detail"><td colspan="10"><div class="detail-head">'+head+' <span class="detail-n">'+r.items.length+'</span></div><div class="loc-list">'+chips+'</div></td></tr>';
+    locUrls = r.items.map(function(i){ return i.url; }).filter(Boolean);
+    document.getElementById('locpopTitle').textContent = mainTk+' Tickets ('+r.items.length+')';
+    document.getElementById('locpopBody').innerHTML =
+      (locUrls.length?'<div class="loc-actions"><button class="loc-copyall">⧉ Copy all ('+locUrls.length+')</button></div>':'')
+      + '<div class="loc-list">'+chips+'</div>';
+    document.getElementById('locpop').style.display='flex';
   }
+  var locUrls=[];
+  document.getElementById('locpopBody').addEventListener('click', function(e){
+    var b=e.target.closest('.loc-copyall'); if(!b) return;
+    var txt=locUrls.join('\n');
+    if(navigator.clipboard) navigator.clipboard.writeText(txt).then(function(){ var o=b.textContent; b.textContent='✓ Copied '+locUrls.length; setTimeout(function(){ b.textContent=o; },1500); }, function(){ toast('Copy failed'); });
+  });
+  function closeLocModal(){ document.getElementById('locpop').style.display='none'; }
   function updateTitle(shown){
     document.getElementById('paneltitle').innerHTML =
       (state.tab==='all'?'All cards':esc(state.tab)) + '<span>'+shown+' shown · '+doneCount()+' done</span>';
@@ -393,7 +614,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     var list = sortList(cards.filter(passes));
     updateTitle(list.length);
     document.getElementById('rows').innerHTML = list.length
-      ? list.map(function(c){ return rowHtml(c) + (expanded[c.id] && c.related && c.related.items.length ? detailHtml(c) : ''); }).join('')
+      ? list.map(function(c){ return rowHtml(c) + (expandedTasks[c.id] && (hasCrTasks(c)||hasCrFiles(c)) ? panelHtml(c) : ''); }).join('')
       : '<tr><td colspan="10" class="empty">No cards match.</td></tr>';
     Array.prototype.forEach.call(document.querySelectorAll('th.sortable'), function(th){
       var k=th.getAttribute('data-sort');
@@ -410,13 +631,22 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   document.getElementById('lqaFilter').addEventListener('click', function(){
     state.lqaOnly=!state.lqaOnly; this.classList.toggle('on', state.lqaOnly); render();
   });
-  // expand/collapse a card's localization cards
+  // chevron toggles the Crowdin tasks panel; the 🗂 button opens the localization-cards modal
   document.getElementById('rows').addEventListener('click', function(e){
-    var b=e.target.closest('.exp[data-exp]'); if(!b) return;
-    var id=b.getAttribute('data-exp');
-    if(expanded[id]) delete expanded[id]; else expanded[id]=true;
-    render();
+    var t=e.target.closest('.exp[data-tasks]');
+    if(t){ var id=t.getAttribute('data-tasks'); if(expandedTasks[id]) delete expandedTasks[id]; else { expandedTasks[id]=true; var c=cards.filter(function(x){return x.id===id;})[0]; if(c){ if(hasCrTasks(c)) fetchTaskProgress(c); else if(hasCrFiles(c)) fetchFileProgress(c); } } render(); return; }
+    var l=e.target.closest('.loc-btn[data-loc]');
+    if(l){ openLocModal(l.getAttribute('data-loc')); return; }
   });
+  document.getElementById('locpopClose').addEventListener('click', closeLocModal);
+  document.getElementById('locpop').addEventListener('click', function(e){ if(e.target===this) closeLocModal(); });
+  document.getElementById('attpopClose').addEventListener('click', closeAtt);
+  document.getElementById('attpop').addEventListener('click', function(e){ if(e.target===this) closeAtt(); });
+  document.getElementById('attpopBody').addEventListener('click', function(e){ var it=e.target.closest('.att-item[data-att]'); if(it) selectAttachment(it.getAttribute('data-att')); });
+  document.getElementById('lingBtn').addEventListener('click', openLinguists);
+  document.getElementById('lingClose').addEventListener('click', closeLinguists);
+  document.getElementById('lingSave').addEventListener('click', saveLinguists);
+  document.getElementById('lingpop').addEventListener('click', function(e){ if(e.target===this) closeLinguists(); });
   // click the LQA pill's ✕ (or the pill) to dismiss it; remembered until a newer LQA comment
   document.getElementById('rows').addEventListener('click', function(e){
     var x=e.target.closest('.pill.lqa .x'); if(!x) return;
@@ -461,56 +691,571 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   function closeMsg(){ document.getElementById('msgpop').style.display='none'; }
   document.getElementById('msgpopClose').addEventListener('click', closeMsg);
   document.getElementById('msgpop').addEventListener('click', function(e){ if(e.target===this) closeMsg(); });
-  document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeMsg(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ closeMsg(); closeSheetPicker(); closeLocModal(); closeAtt(); closeMgr(); } });
 
-  // ---- "→ Sheet": push a card to its Google Sheet via the Apps Script web app ----
-  var SHEET_URL_KEY='briefTracker.sheetUrl';
-  var SHEET_META={
-    MPY:{name:'MPY-Linguini & Farming', url:'https://docs.google.com/spreadsheets/d/1YMqUI3ZUIMK4W0gpSvnBOTkCyxE4W3lnul80bx_FFss/edit'},
-    PF: {name:'Pixel Flow translations', url:'https://docs.google.com/spreadsheets/d/1D-OdC4TeqX-nECnwAgYv_RlrCXtX2euayuPrJzmbYog/edit'}
-  };
+  // ---- "→ Sheet": pick a spreadsheet, then push a card to it via the Apps Script web app ----
+  var SHEET_URL_KEY='briefTracker.sheetUrl', SHEETS_KEY='briefTracker.sheets';
+  var DRIVE_PARENT='1CDbSwAf9_9Uu5EWFS_Sypuut-d92cFaQ';   // parent Drive folder for <ticket> attachment subfolders
+  var LQA_FOLDER='1IC51iCJPoa8bkOEk130lGOZeWEXw3pFT';     // folder where LQA Report spreadsheets are created
+  function loadSheets(){
+    try { var s=JSON.parse(localStorage.getItem(SHEETS_KEY)); if(s&&s.length) return s; } catch(e){}
+    return [   // seeded defaults on first run
+      { name:'MPY-Linguini & Farming', id:'1YMqUI3ZUIMK4W0gpSvnBOTkCyxE4W3lnul80bx_FFss' },
+      { name:'Pixel Flow translations', id:'1D-OdC4TeqX-nECnwAgYv_RlrCXtX2euayuPrJzmbYog' }
+    ];
+  }
+  function saveSheets(list){ localStorage.setItem(SHEETS_KEY, JSON.stringify(list)); }
+  // remember which batch (spreadsheet) a card belongs to, so → Crowdin can auto-pick the folder
+  var CARDSHEET_KEY='briefTracker.cardSheet', LASTBATCH_KEY='briefTracker.lastBatch';
+  var cardSheet={}; try { cardSheet=JSON.parse(localStorage.getItem(CARDSHEET_KEY)||'{}')||{}; } catch(e){ cardSheet={}; }
+  function rememberBatch(ticket, name){ if(!ticket||!name) return; cardSheet[ticket]=name; try { localStorage.setItem(CARDSHEET_KEY, JSON.stringify(cardSheet)); localStorage.setItem(LASTBATCH_KEY, name); } catch(e){} }
+  function lastBatch(){ try { return localStorage.getItem(LASTBATCH_KEY)||''; } catch(e){ return ''; } }
+  // which cards already have a sheet tab (set on → Sheet); once set, the button becomes "import"
+  var STABS_KEY='briefTracker.sheetTabs';
+  var sheetTabs={}; try { sheetTabs=JSON.parse(localStorage.getItem(STABS_KEY)||'{}')||{}; } catch(e){ sheetTabs={}; }
+  function rememberTab(id, sheet){ if(!id||!sheet) return; var v={ id:sheet.id, name:sheet.name }; sheetTabs[id]=v; try { localStorage.setItem(STABS_KEY, JSON.stringify(sheetTabs)); } catch(e){} try { syncWrite({ kind:'sheettab', id:id, val:JSON.stringify(v) }); } catch(e){} }
+  function sheetIdFrom(input){ var m=String(input||'').match(/\/d\/([A-Za-z0-9_-]{20,})/); return m?m[1]:String(input||'').trim(); }
+  function sheetUrlOf(id){ return 'https://docs.google.com/spreadsheets/d/'+id+'/edit'; }
   function toast(html, ms){
     var t=document.getElementById('toast'); t.innerHTML=html; t.classList.add('show');
     clearTimeout(toast._t); toast._t=setTimeout(function(){ t.classList.remove('show'); }, ms||6000);
   }
-  document.getElementById('rows').addEventListener('click', function(e){
-    var b=e.target.closest('.sheet-btn'); if(!b) return;
-    var id=b.getAttribute('data-sheet');
-    var c=cards.filter(function(x){return x.id===id;})[0]; if(!c) return;
-    var ip=c.ticket.split('-')[0];
-    if(!SHEET_META[ip]){ toast('No spreadsheet is set up for <b>'+esc(ip)+'</b> tasks yet.'); return; }
+
+  var sheetCard=null;
+  function openSheetPicker(c){
+    sheetCard=c;
+    document.getElementById('sheetpopTitle').textContent = 'Send '+c.ticket+' to…';
+    renderSheetList();
+    document.getElementById('sheetName').value=''; document.getElementById('sheetUrl').value='';
+    document.getElementById('sheetpop').style.display='flex';
+  }
+  function closeSheetPicker(){ document.getElementById('sheetpop').style.display='none'; }
+  var SHEET_COLORS=['#3e6fb0','#33a15c','#c77a16','#7a5bb0','#2f9e8f','#cf4b3b','#b8497f','#4a7d3a'];
+  function renderSheetList(){
+    var list=loadSheets();
+    document.getElementById('sheetList').innerHTML = list.length
+      ? list.map(function(s,i){ var col=SHEET_COLORS[i%SHEET_COLORS.length];
+          return '<div class="sheet-row"><button class="sheet-pick" data-i="'+i+'" style="background:'+col+'22;border-color:'+col+';color:'+col+'">'+esc(s.name)+'</button><button class="sheet-del" data-i="'+i+'" title="Remove">✕</button></div>'; }).join('')
+      : '<div class="sheet-empty">No spreadsheets yet — add one below.</div>';
+  }
+  function sendToSheet(c, sheet){
     var url=localStorage.getItem(SHEET_URL_KEY);
     if(!url){
-      url=prompt('One-time: paste your Apps Script web-app URL\n(Deploy the sheets-connector.gs script, then paste the /exec URL here):','');
+      url=prompt('One-time: paste your Apps Script web-app URL\n(Deploy sheets-connector.gs, then paste the /exec URL here):','');
       if(!url) return; url=url.trim(); localStorage.setItem(SHEET_URL_KEY, url);
     }
-    var payload={ ip:ip, tab:c.ticket, projectName:c.title, langCodes:c.languages||[], strings:c.strings||[] };
-    b.disabled=true;
+    rememberBatch(c.ticket, sheet.name); rememberTab(c.id, sheet);
+    var payload={ spreadsheetId:sheet.id, ip:c.ticket.split('-')[0], tab:c.ticket, projectName:c.title, link:c.permalink||'', langCodes:c.languages||[], strings:c.strings||[] };
+    closeSheetPicker(); render();
     fetch(url, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload)})
       .then(function(){
         var warn=(!c.strings||!c.strings.length)?' — no Original content found, fill it in':'';
-        toast('Sent <b>'+esc(c.ticket)+'</b> → '+esc(SHEET_META[ip].name)+warn+
-              '. <a href="'+SHEET_META[ip].url+'" target="_blank" rel="noreferrer">open sheet</a>');
+        toast('Sent <b>'+esc(c.ticket)+'</b> → '+esc(sheet.name)+warn+'. <a href="'+sheetUrlOf(sheet.id)+'" target="_blank" rel="noreferrer">open sheet</a>');
       })
-      .catch(function(err){ toast('Send failed: '+esc(String(err&&err.message||err))); })
-      .then(function(){ b.disabled=false; });
+      .catch(function(err){ toast('Send failed: '+esc(String(err&&err.message||err))); });
+    promptAttachment(c, sheet);   // then offer to attach the source creative to Drive + Context
+  }
+  // After sending to a sheet: list the card's Wrike attachments so the user can pick one to
+  // upload to Drive and drop the link into the Context column.
+  var attCtx=null;
+  function fmtBytes(n){ n=Number(n)||0; if(n<1024) return n+' B'; if(n<1048576) return (n/1024).toFixed(0)+' KB'; return (n/1048576).toFixed(1)+' MB'; }
+  function promptAttachment(c, sheet){
+    fetch('/api/wrike-attachments', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ op:'list', taskId:c.id }) })
+      .then(cjson).then(function(r){
+        var atts=r.attachments||[];
+        if(!atts.length){ toast('No Wrike attachments on <b>'+esc(c.ticket)+'</b>.'); return; }
+        attCtx={ c:c, sheet:sheet };
+        document.getElementById('attpopTitle').textContent=c.ticket+' — attach source to Drive';
+        document.getElementById('attpopBody').innerHTML='<div class="att-list">'+atts.map(function(a,i){
+          return '<button class="att-item" data-att="'+esc(a.id)+'"><span class="att-name">'+esc(a.name)+'</span>'
+            +'<span class="att-meta">'+esc(fmtBytes(a.size))+' · '+esc(String(a.createdDate||'').slice(0,10))+(i===0?' <span class="att-latest">latest</span>':'')+'</span></button>';
+        }).join('')+'</div>';
+        document.getElementById('attpop').style.display='flex';
+      })
+      .catch(function(err){ toast('Couldn’t list attachments: '+esc(String(err.message||err))); });
+  }
+  function closeAtt(){ document.getElementById('attpop').style.display='none'; }
+  function selectAttachment(attId){
+    var c=attCtx&&attCtx.c, sheet=attCtx&&attCtx.sheet; if(!c||!sheet) return;
+    closeAtt();
+    var appsUrl=localStorage.getItem(SHEET_URL_KEY)||'';
+    toast('Uploading attachment to Drive & writing Context for <b>'+esc(c.ticket)+'</b>…', 15000);
+    fetch('/api/wrike-attachments', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ op:'toDrive', taskId:c.id, attachmentId:attId, ticket:c.ticket, url:appsUrl, spreadsheetId:sheet.id, tab:c.ticket, parentFolderId:DRIVE_PARENT }) })
+      .then(cjson).then(function(r){ toast('Uploaded to Drive/'+esc(c.ticket)+' & wrote Context in '+r.rows+' row(s). <a href="'+esc(r.url)+'" target="_blank" rel="noreferrer">open file</a>'); })
+      .catch(function(err){ toast('Drive upload failed: '+esc(String(err.message||err))); });
+  }
+  // ---- Crowdin micro-steps (each its own button in the Automate modal) ----
+  // ③ Create/update the Crowdin source file from the sheet's Original content. Idempotent.
+  function createCrowdinFile(c, b){
+    var d=crtasksMap[c.id];
+    var folder = cardSheet[c.ticket] || (d&&(d.folder||'').replace(/^Google Sheets\//,'')) || lastBatch();
+    if(!folder){ toast('Send this card to a sheet first (to choose the batch).'); return; }
+    if(b) b.disabled=true;
+    toast('Creating/updating the Crowdin file for <b>'+esc(c.ticket)+'</b>…', 9000);
+    fetchSheetSource(c).then(function(sheetStrings){
+      var strings=(sheetStrings&&sheetStrings.length)?sheetStrings:(c.strings||[]);
+      fetch('/api/crowdin-file', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ ticket:c.ticket, strings:strings, folder:folder }) })
+        .then(cjson).then(function(f){
+          var dd = crtasksMap[c.id] || { fileId:null, folder:'', translate:[], proof:[], proofDesired:undefined, phase:'translate', srcCount:0, taskedCount:0, newIter:0 };
+          dd.fileId=f.fileId; dd.folder=f.folder; dd.srcCount=strings.length;
+          saveCrtasks(c.id, dd); render();
+          toast('Crowdin file ready › '+esc(dd.folder)+' — '+strings.length+' source string(s). <a href="'+esc(f.url)+'" target="_blank" rel="noreferrer">open</a>');
+          if(b) b.disabled=false;
+        }).catch(function(err){ toast('Create file failed: '+esc(String(err.message||err))); if(b) b.disabled=false; });
+    });
+  }
+  // ④ Create translation tasks for the file. First run = full-file set (+ proofreading prompt + alphas);
+  // if the source grew since (via Create file), makes a "New strings" batch scoped to the new rows.
+  function createCrowdinTasks(c, b){
+    var d=crtasksMap[c.id];
+    if(!d||!d.fileId){
+      // file exists in Crowdin (e.g. connector-made) but the dashboard has no record — adopt its id, then retry
+      if(b) b.disabled=true;
+      resolveFileId(c).then(function(fileId){
+        if(!fileId){ toast('Upload the source to Crowdin first for <b>'+esc(c.ticket)+'</b>.'); if(b) b.disabled=false; return; }
+        var dd=crtasksMap[c.id]||{ fileId:null, folder:'', translate:[], proof:[], proofDesired:undefined, phase:'translate', srcCount:0, taskedCount:0, newIter:0 };
+        dd.fileId=fileId; saveCrtasks(c.id,dd); if(b) b.disabled=false; createCrowdinTasks(c, b);
+      });
+      return;
+    }
+    var hasTranslate=(d.translate||[]).some(function(t){return t.taskId;});
+    var srcCount=(d.srcCount!=null)?d.srcCount:0;
+    var tasked=(d.taskedCount!=null)?d.taskedCount:(hasTranslate?srcCount:0);
+    if(b) b.disabled=true;
+    if(!hasTranslate){
+      toast('Creating translation tasks for <b>'+esc(c.ticket)+'</b>…', 9000);
+      fetch('/api/crowdin-tasks', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ fileId:d.fileId, title:c.title, codes:c.languages||[], type:0 }) })
+        .then(cjson).then(function(tr){
+          d.translate=tr.tasks||[]; d.newIter=0; d.taskedCount=srcCount; d.phase='translate';
+          (d.translate||[]).forEach(function(t){ if(t.taskId!=null) progressMap[t.taskId]=t.percent; });
+          if(d.proofDesired===undefined||d.proofDesired===null) d.proofDesired=confirm('Create corresponding proofreading tasks too?\n\n(They are created when you mark translation done — Crowdin needs translations to exist first.)');
+          saveCrtasks(c.id,d); expandedTasks[c.id]=true; render();
+          var made=d.translate.filter(function(t){return t.taskId&&!t.skipped;}).length, sk=d.translate.filter(function(t){return t.skipped;}).length, er=d.translate.filter(function(t){return t.error;}).length;
+          toast('Created '+made+' translation task(s)'+(sk?', '+sk+' already existed':'')+(er?', '+er+' failed':'')+'.'); if(b) b.disabled=false;
+          createAlphasForTasks(c, d.translate);
+        }).catch(function(err){ toast('Create tasks failed: '+esc(String(err.message||err))); if(b) b.disabled=false; });
+      return;
+    }
+    var added=srcCount-tasked;
+    if(added<=0){ toast('No new strings for <b>'+esc(c.ticket)+'</b> — tasks already created. (Run Create file after adding rows to pick up new ones.)'); if(b) b.disabled=false; return; }
+    d.newIter=(d.newIter||0)+1;
+    var label=(d.newIter===1)?'New strings':('#'+d.newIter+' New strings');
+    var title=label+' in '+c.title;
+    toast('Creating tasks for '+added+' new string(s) in <b>'+esc(c.ticket)+'</b>…', 9000);
+    fetch('/api/crowdin-tasks', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ fileId:d.fileId, title:title, codes:c.languages||[], type:0, skipAssigned:true }) })
+      .then(cjson).then(function(tr){
+        (tr.tasks||[]).forEach(function(t){ t.batch=label; if(t.taskId!=null) progressMap[t.taskId]=t.percent; });
+        d.translate=(d.translate||[]).concat(tr.tasks||[]); d.taskedCount=srcCount;
+        saveCrtasks(c.id,d); expandedTasks[c.id]=true; render();
+        var made=(tr.tasks||[]).filter(function(t){return t.taskId&&!t.skipped;}).length, sk=(tr.tasks||[]).filter(function(t){return t.skipped;}).length, er=(tr.tasks||[]).filter(function(t){return t.error;}).length;
+        toast('Created '+made+' task(s) — '+esc(label)+' in <b>'+esc(c.ticket)+'</b>'+(sk?', '+sk+' already existed':'')+(er?', '+er+' failed':'')+'.'); if(b) b.disabled=false;
+        createAlphasForTasks(c, tr.tasks);
+      }).catch(function(err){ d.newIter--; toast('New-strings tasks failed: '+esc(String(err.message||err))); if(b) b.disabled=false; });
+  }
+  // Per-card "Automate" modal — houses the Sheet/Import + Crowdin actions in one place.
+  function openAutomate(id){
+    var c=cards.filter(function(x){return x.id===id;})[0]; if(!c) return;
+    document.getElementById('autopopTitle').textContent = c.ticket+' — Automate';
+    var hasTab=!!sheetTabs[c.id];
+    var d=crtasksMap[c.id]; var hasFile=!!(d&&d.fileId)||hasCrFiles(c);   // dashboard-created OR scanned file
+    function B(act,label,disabled,hint){
+      return '<button class="auto-step" data-act="'+act+'" data-id="'+esc(c.id)+'"'+(disabled?' disabled':'')+'>'+label+'</button>'
+        + (disabled&&hint?'<div class="auto-hint">'+esc(hint)+'</div>':'');
+    }
+    document.getElementById('autopopBody').innerHTML =
+      '<div class="auto-cols">'
+      + '<div class="auto-col grp-sheet"><div class="auto-group">Sheet</div>'
+        + B('sheet','Create spreadsheet tab', hasTab, 'A tab already exists for this card.')
+        + B('import','Import translations into sheet', !hasTab, 'Create the spreadsheet tab first.')
+      + '</div>'
+      + '<div class="auto-col grp-crowdin"><div class="auto-group">Crowdin</div>'
+        + B('file',(hasFile?'Re-upload source to Crowdin':'Upload source to Crowdin'), !hasTab, 'Create the spreadsheet tab first — the source is read from the tab.')
+        + B('tasks','Create tasks + alphas', !hasFile, 'Upload the source to Crowdin first.')
+      + '</div>'
+      + '<div class="auto-col grp-lqa"><div class="auto-group">LQA</div>'
+        + B('lqa-report','Create report', false, '')
+        + ((d&&d.lqaReport)?'<a class="auto-link" href="'+esc(d.lqaReport)+'" target="_blank" rel="noreferrer">↗ Open report</a>':'')
+        + B('lqa-alphas','Create LQA alphas', false, '')
+      + '</div>'
+      + '</div>';
+    document.getElementById('autopop').style.display='flex';
+  }
+  function closeAutomate(){ document.getElementById('autopop').style.display='none'; }
+  document.getElementById('rows').addEventListener('click', function(e){
+    var a=e.target.closest('.automate-btn'); if(!a) return;
+    openAutomate(a.getAttribute('data-automate'));
   });
+  document.getElementById('autopopBody').addEventListener('click', function(e){
+    var btn=e.target.closest('.auto-step[data-act]'); if(!btn || btn.disabled) return;
+    var c=cards.filter(function(x){return x.id===btn.getAttribute('data-id');})[0]; if(!c) return;
+    var act=btn.getAttribute('data-act'); closeAutomate();
+    if(act==='sheet') openSheetPicker(c);
+    else if(act==='import') importTranslations(c, btn);
+    else if(act==='file') createCrowdinFile(c, btn);
+    else if(act==='tasks') createCrowdinTasks(c, btn);
+    else if(act==='lqa-report') makeLqaReport(c, btn);
+    else if(act==='lqa-alphas') makeLqaAlphas(c, btn);
+  });
+  // ---- LQA: report spreadsheet + review alphas ----
+  function lqaAssetsUrl(c){   // the Google Drive review-assets link from the LQA comment(s)
+    var texts=(c.lqaComments||[]).map(function(x){return x.text||'';}).join('\n');
+    var m=texts.match(/https?:\/\/(?:drive|docs)\.google\.com\/[^\s"'<>)]+/i);
+    return m?m[0]:'';
+  }
+  function lqaReportName(c){ return String(c.title||c.ticket).replace(/\s*[-–]\s*Loc\s*Collaborat\w*\s*$/i,'').trim()+'_LQA Report'; }
+  function makeLqaReport(c, b){
+    var appsUrl=localStorage.getItem(SHEET_URL_KEY)||'';
+    if(!appsUrl){ toast('Set the Apps Script URL first (⚙ Apps Script URL).'); return; }
+    var assets=lqaAssetsUrl(c);
+    if(!assets){
+      toast('⚠ No assets link found in the LQA comment for <b>'+esc(c.ticket)+'</b>.');
+      assets=prompt('No Google Drive assets link found for '+c.ticket+'.\nPaste the review-assets link:','');
+      if(assets===null) return;                       // cancelled
+      assets=(assets||'').trim();
+      if(!assets){ toast('No assets link entered — LQA report aborted.'); return; }
+    }
+    if(b) b.disabled=true;
+    toast('Creating the LQA Report for <b>'+esc(c.ticket)+'</b>…', 12000);
+    fetch('/api/lqa-report', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ url:appsUrl, parentFolderId:LQA_FOLDER, name:lqaReportName(c), langs:c.languages||[], assetsUrl:assets }) })
+      .then(cjson).then(function(r){
+        var d=crtasksMap[c.id]||{ fileId:null, folder:'', translate:[], proof:[], proofDesired:undefined, phase:'translate', srcCount:0, taskedCount:0, newIter:0 };
+        d.lqaReport=r.url; saveCrtasks(c.id,d); render();
+        var acc = (r.accessible===false) ? ' ⚠ no access to the assets link — request access' : '';
+        var warn = (r.moved===false?' ⚠ not moved to the LQA folder':'')+(r.shared===false?' ⚠ not shared':'');
+        toast('LQA Report ready ('+((c.languages||[]).length)+' tab(s)). <a href="'+esc(r.url)+'" target="_blank" rel="noreferrer">open</a>'+acc+warn);
+        if(b) b.disabled=false;
+      }).catch(function(err){ toast('LQA Report failed: '+esc(String(err.message||err))); if(b) b.disabled=false; });
+  }
+  function makeLqaAlphas(c, b){
+    var reportUrl=(crtasksMap[c.id]&&crtasksMap[c.id].lqaReport)||c.permalink||'';
+    var codes=c.languages||[];
+    if(!codes.length){ toast('No languages on <b>'+esc(c.ticket)+'</b>.'); return; }
+    var items=codes.map(function(code){ var lg=(linguists[String(code).toUpperCase()]||{}).lqa||'wes'; return { url:reportUrl, code:code, description:locTitleFor(c,code), stage:'lqa', execId:lg, tags:alphaTags(c,'lqa') }; });
+    pickManager(function(mgr){
+    if(b) b.disabled=true;
+    toast('Creating '+items.length+' LQA alpha(s) in Alconost'+(mgr?' as '+esc(mgr):'')+'…', 12000);
+    fetch('/api/alconost-alpha', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ items:items, manager:mgr }) })
+      .then(cjson).then(function(res){
+        var ok=(res.results||[]).filter(function(r){return r.ok||r.alphaId;}).length;
+        var sk=(res.results||[]).filter(function(r){return r.skipped==='no-linguist';}).length;
+        var er=(res.results||[]).filter(function(r){return r.error;});
+        var msg='Created '+ok+' LQA alpha(s)'+(sk?', '+sk+' skipped (no linguist)':'')+(er.length?', '+er.length+' failed':'')+' in Alconost.';
+        if(er.length){ msg+=' ('+esc(String(er[0].error).slice(0,140))+')'; }
+        toast(msg); if(b) b.disabled=false;
+      }).catch(function(err){ toast('LQA alphas failed: '+esc(String(err.message||err))); if(b) b.disabled=false; });
+    });
+  }
+  document.getElementById('autopopClose').addEventListener('click', closeAutomate);
+  document.getElementById('autopop').addEventListener('click', function(e){ if(e.target===this) closeAutomate(); });
+  // Read the tab's "Original content" column server-side (needs a sheet tab + redeployed Apps Script).
+  // Resolves to an array of source strings, or null when no tab/URL/capability is available.
+  function fetchSheetSource(c){
+    var tab=sheetTabs[c.id], url=localStorage.getItem(SHEET_URL_KEY);
+    if(!tab||!url) return Promise.resolve(null);
+    return fetch('/api/sheet-tabs', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ op:'readSource', url:url, id:tab.id, tab:c.ticket }) })
+      .then(cjson).then(function(res){
+        if(res.needsRedeploy){ if(!_redeployWarned){ _redeployWarned=true; toast('Redeploy the Apps Script to read source from the sheet (Manage deployments ▸ New version).', 8000); } return null; }
+        return Array.isArray(res.strings) ? res.strings : null;
+      }).catch(function(){ return null; });
+  }
+  function cjson(r){ return r.json().then(function(j){ if(!r.ok || (j&&j.error)) throw new Error((j&&j.error)||'request failed'); return j; }); }
+  function saveCrtasks(id, data){ crtasksMap[id]=data; try{ syncWrite({ kind:'crtasks', id:id, val:JSON.stringify(data) }); }catch(e){} }
+  function cheaders(){ return Object.assign({ 'Content-Type':'application/json' }, authHeaders()); }
+  // Preferred-linguists editor (execId per language per stage) — opens a table modal.
+  function openLinguists(){
+    var codes=LCODES.slice(); Object.keys(linguists).forEach(function(k){ if(codes.indexOf(k)<0) codes.push(k); });
+    var head='<tr><th>Lang</th>'+LSTAGES.map(function(s){ return '<th>'+esc(s)+'</th>'; }).join('')+'</tr>';
+    var body=codes.map(function(code){
+      var row=linguists[code]||{};
+      var cells=LSTAGES.map(function(s){ return '<td><input class="ling-inp" data-code="'+esc(code)+'" data-stage="'+esc(s)+'" value="'+esc(row[s]||'')+'" placeholder="—"/></td>'; }).join('');
+      return '<tr><th class="ling-code">'+esc(code)+'</th>'+cells+'</tr>';
+    }).join('');
+    document.getElementById('lingBody').innerHTML='<table class="ling-table"><thead>'+head+'</thead><tbody>'+body+'</tbody></table>';
+    document.getElementById('lingpop').style.display='flex';
+  }
+  function closeLinguists(){ document.getElementById('lingpop').style.display='none'; }
+  function saveLinguists(){
+    var next={};
+    document.querySelectorAll('#lingBody .ling-inp').forEach(function(inp){
+      var code=inp.getAttribute('data-code'), stage=inp.getAttribute('data-stage'), v=inp.value.trim();
+      if(!v) return; if(!next[code]) next[code]={}; next[code][stage]=v;
+    });
+    linguists=next;
+    syncWrite({ kind:'linguists', id:'map', val:JSON.stringify(linguists) });
+    closeLinguists(); toast('Preferred linguists saved (shared).');
+  }
+  // description for an alpha = the copy-localization ticket's full title for that language.
+  function locTitleFor(c, code){
+    var items=(c.related&&c.related.items)||[]; var u=String(code||'').toUpperCase();
+    var hit=items.filter(function(i){ return String(i.lang||'').toUpperCase()===u; })[0];
+    return (hit&&hit.title) ? hit.title : (c.title+' ['+code+']');
+  }
+  // ---- manager picker: an alpha's manager = whose Alconost key creates it (server-side keys) ----
+  var managers=[], MGR_KEY='briefTracker.lastManager', lastManager='';
+  try{ lastManager=localStorage.getItem(MGR_KEY)||''; }catch(e){}
+  function loadManagers(){ fetch('/api/managers', { cache:'no-store', headers:authHeaders() }).then(cjson).then(function(j){ managers=j.managers||[]; }).catch(function(){}); }
+  var mgrCb=null;
+  function pickManager(onPick){
+    if(!managers.length){ onPick(''); return; }        // none configured → default key
+    if(managers.length===1){ onPick(managers[0]); return; }
+    mgrCb=onPick;
+    var order=['igor','dasha'];   // preferred left→right; others follow alphabetically
+    var ordered=managers.slice().sort(function(a,b){ var ai=order.indexOf(String(a).toLowerCase()); var bi=order.indexOf(String(b).toLowerCase()); ai=ai<0?99:ai; bi=bi<0?99:bi; return ai-bi || String(a).localeCompare(String(b)); });
+    var btns=ordered.map(function(m){
+      var init=String(m).charAt(0).toUpperCase();
+      return '<button class="mgr-item'+(m===lastManager?' is-last':'')+'" data-mgr="'+esc(m)+'">'
+        + '<span class="mgr-av">'+esc(init)+'</span>'
+        + '<span class="mgr-name">'+esc(m)+'</span>'
+        + (m===lastManager?'<span class="mgr-last">last used</span>':'')+'</button>';
+    }).join('');
+    document.getElementById('mgrBody').innerHTML='<div class="mgr-list">'+btns+'</div>';
+    document.getElementById('mgrpop').style.display='flex';
+  }
+  function closeMgr(){ document.getElementById('mgrpop').style.display='none'; mgrCb=null; }
+  document.getElementById('mgrBody').addEventListener('click', function(e){ var it=e.target.closest('.mgr-item[data-mgr]'); if(!it) return; var m=it.getAttribute('data-mgr'); lastManager=m; try{localStorage.setItem(MGR_KEY,m);}catch(e2){} var cb=mgrCb; closeMgr(); if(cb) cb(m); });
+  document.getElementById('mgrClose').addEventListener('click', closeMgr);
+  document.getElementById('mgrpop').addEventListener('click', function(e){ if(e.target===this) closeMgr(); });
+  // Alpha tags: the task's ticket, plus a stage tag (translation→#loc, proofreading→none, lqa→#lqa).
+  function alphaTags(c, stage){ return '#'+String(c.ticket||'').replace(/\s+/g,'')+(stage==='translation'?' #loc':(stage==='lqa'?' #lqa':'')); }
+  // For each freshly-created Crowdin task, create one Alconost alpha. The linguist (execId) is
+  // taken from the shared Linguists table (execId per language per stage) and sent per item.
+  function createAlphasForTasks(c, tasks, stage){
+    stage = stage || 'translation';
+    var d=crtasksMap[c.id];
+    var pend=(tasks||[]).filter(function(t){ return t.taskId && !t.skipped && !t.alphaId; });
+    if(!pend.length) return;
+    var items=pend.map(function(t){ var row=linguists[String(t.code).toUpperCase()]||{}; return { url:t.url, code:t.code, description:locTitleFor(c,t.code), stage:stage, execId:row[stage]||'', tags:alphaTags(c,stage) }; });
+    pickManager(function(mgr){
+    toast('Creating '+items.length+' '+esc(stage)+' alpha(s) in Alconost'+(mgr?' as '+esc(mgr):'')+'…', 9000);
+    fetch('/api/alconost-alpha', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ items:items, manager:mgr }) })
+      .then(cjson).then(function(res){
+        var byCode={}; (res.results||[]).forEach(function(r){ byCode[String(r.code).toUpperCase()]=r; });
+        pend.forEach(function(t){ var r=byCode[String(t.code).toUpperCase()]; if(r&&(r.ok||r.alphaId)) t.alphaId=r.alphaId||('alpha:'+t.code); });
+        if(d) saveCrtasks(c.id,d); render();
+        var ok=(res.results||[]).filter(function(r){return r.ok||r.alphaId;}).length;
+        var sk=(res.results||[]).filter(function(r){return r.skipped==='no-linguist';}).length;
+        var er=(res.results||[]).filter(function(r){return r.error;});
+        var msg='Created '+ok+' '+esc(stage)+' alpha(s)'+(sk?', '+sk+' skipped (no linguist)':'')+(er.length?', '+er.length+' failed':'')+' in Alconost.';
+        if(er.length){ msg+=' ('+esc(String(er[0].error).slice(0,140))+')'; }
+        toast(msg);
+      })
+      .catch(function(err){ toast('Alpha creation failed: '+esc(String(err.message||err))); });
+    });
+  }
+  function fetchTaskProgress(c){
+    var d=crtasksMap[c.id]; if(!d) return;
+    var list = (d.phase==='proof') ? (d.proof||[]) : (d.translate||[]);
+    var ids = list.filter(function(t){return t.taskId;}).map(function(t){return t.taskId;});
+    if(!ids.length) return;
+    fetch('/api/crowdin-progress', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ taskIds:ids }) })
+      .then(cjson).then(function(j){
+        if(j&&j.progress){ Object.keys(j.progress).forEach(function(k){ progressMap[k]=j.progress[k]; }); }
+        if(j&&j.missing&&j.missing.length){   // tasks deleted in Crowdin → remove them here too
+          var rm={}; j.missing.forEach(function(id){ rm[String(id)]=true; });
+          if(d.translate) d.translate=d.translate.filter(function(t){ return !rm[String(t.taskId)]; });
+          if(d.proof) d.proof=d.proof.filter(function(t){ return !rm[String(t.taskId)]; });
+          saveCrtasks(c.id, d);
+        }
+        render();
+      })
+      .catch(function(){});
+  }
+  // The expandable panel = a Crowdin-files section (with progress) + the tasks section (if any).
+  function panelHtml(c){
+    // Tasks (when present) already cover the file's languages — show them and skip the file section
+    // to avoid duplication. For file-only cards, show the file(s) in the same task-row style.
+    var out='';
+    if(hasCrTasks(c)){
+      out += tasksInnerHtml(c);
+    } else if(hasCrFiles(c)){
+      out += '<div class="detail-head">'+esc(c.ticket)+' — Crowdin file'+(crFilesMap[c.id].length>1?'s':'')
+        + ' <span class="detail-n">'+crFilesMap[c.id].length+'</span>'
+        + ' <button class="tk-refresh" data-frefresh="'+esc(c.id)+'">↻ progress</button></div>'
+        + '<div class="tk-list">'+fileProgHtml(c)+'</div>';
+    }
+    return '<tr class="detail"><td colspan="10">'+out+'</td></tr>';
+  }
+  function fileProgHtml(c){
+    var prog=crFileProg[c.id];
+    var files = (prog && prog.length) ? prog : (crFilesMap[c.id]||[]);
+    if(!files.length) return '<div class="tk-empty">No Crowdin files.</div>';
+    var multi=files.length>1;
+    return files.map(function(f){
+      var sub = multi ? '<div class="tk-subhead"><a href="'+esc(f.url)+'" target="_blank" rel="noreferrer" title="'+esc(f.name)+'">'+esc(f.title||f.name)+' ↗</a></div>' : '';
+      var rows = (prog && f.langs) ? f.langs.map(function(l){
+          var lu=l.editorUrl||f.url;   // per-language Crowdin editor link
+          return '<div class="tk-row"><span class="tk-lang">'+esc(l.code)+'</span>'
+            + '<span class="tk-prog"><span class="tk-bar"><span style="width:'+l.translation+'%"></span></span><span class="tk-pct">'+l.translation+'%</span></span>'
+            + '<a class="tk-open" href="'+esc(lu)+'" target="_blank" rel="noreferrer">open ↗</a>'
+            + '<button class="tk-copy" data-copy="'+esc(lu)+'" title="Copy editor link">copy</button></div>';
+        }).join('') : '<div class="tk-row muted">scanning progress…</div>';
+      return sub+rows;
+    }).join('');
+  }
+  function tasksInnerHtml(c){
+    var d=crtasksMap[c.id]; if(!d || !hasCrTasks(c)) return '';
+    var proof=(d.phase==='proof'), list = proof ? (d.proof||[]) : (d.translate||[]);
+    var head = proof ? 'Proofreading tasks' : 'Translation tasks';
+    var rows = list.map(function(t){
+      var tag=(t.batch?'<span class="tk-batch">'+esc(t.batch)+'</span>':'')+(t.skipped?'<span class="tk-skip">existing</span>':'');
+      if(t.error) return '<div class="tk-row tk-err"><span class="tk-lang">'+esc(t.code||t.langId||'?')+'</span>'+tag+'<span class="tk-msg">'+esc(t.error)+'</span></div>';
+      var pct=(progressMap[t.taskId]!=null?progressMap[t.taskId]:(t.percent||0));
+      return '<div class="tk-row"><span class="tk-lang">'+esc(t.code||t.langId)+'</span>'+tag
+        + '<span class="tk-prog"><span class="tk-bar"><span style="width:'+pct+'%"></span></span><span class="tk-pct">'+pct+'%</span></span>'
+        + '<a class="tk-open" href="'+esc(t.url)+'" target="_blank" rel="noreferrer">open ↗</a>'
+        + '<button class="tk-copy" data-copy="'+esc(t.url)+'" title="Copy task link">copy</button></div>';
+    }).join('') || '<div class="tk-empty">No tasks in this phase yet.</div>';
+    var doneBtn = (!proof && d.proofDesired) ? '<button class="tk-done" data-tdone="'+esc(c.id)+'">Translation done → create proofreading</button>' : '';
+    return '<div class="detail-head">'+esc(c.ticket)+' — '+head
+      + ' <span class="detail-n">'+list.filter(function(t){return t.taskId;}).length+'</span>'
+      + ' <button class="tk-refresh" data-trefresh="'+esc(c.id)+'">↻ progress</button></div>'
+      + '<div class="tk-list">'+rows+'</div>'+(doneBtn?'<div class="tk-actions">'+doneBtn+'</div>':'');
+  }
+  // Fetch per-language file progress for a card (on expand), then re-render.
+  function fetchFileProgress(c){
+    fetch('/api/crowdin-scan', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ ticket:c.ticket, codes:c.languages||[] }) })
+      .then(cjson).then(function(r){
+        crFileProg[c.id]=r.files||[];
+        if(!hasCrFiles(c)) crFilesMap[c.id]=(r.files||[]).map(function(f){ return { fileId:f.fileId, name:f.name, title:f.title, url:f.url }; });
+        render();
+      }).catch(function(){});
+  }
+  // On load: which cards have a Crowdin file (one file-list call), so the ▸ panel shows for them.
+  function scanCrowdinIndex(){
+    var tickets=cards.map(function(c){ return c.ticket; }).filter(Boolean);
+    if(!tickets.length) return;
+    fetch('/api/crowdin-scan', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ tickets:tickets }) })
+      .then(cjson).then(function(r){
+        var idx=r.index||{}, changed=false;
+        cards.forEach(function(c){ if(idx[c.ticket]){ crFilesMap[c.id]=idx[c.ticket]; changed=true; } });
+        if(changed) render();
+      }).catch(function(){});
+  }
+  // tasks panel actions: copy link, refresh progress, translation done → proofreading
+  document.getElementById('rows').addEventListener('click', function(e){
+    var cp=e.target.closest('.tk-copy[data-copy]');
+    if(cp){ var url=cp.getAttribute('data-copy'); if(navigator.clipboard) navigator.clipboard.writeText(url).then(function(){ var o=cp.textContent; cp.textContent='copied'; setTimeout(function(){ cp.textContent=o; },1200); }, function(){ toast('Copy failed'); }); return; }
+    var rf=e.target.closest('.tk-refresh[data-trefresh]');
+    if(rf){ var c1=cards.filter(function(x){return x.id===rf.getAttribute('data-trefresh');})[0]; if(c1) fetchTaskProgress(c1); return; }
+    var ff=e.target.closest('.tk-refresh[data-frefresh]');
+    if(ff){ var cf=cards.filter(function(x){return x.id===ff.getAttribute('data-frefresh');})[0]; if(cf) fetchFileProgress(cf); return; }
+    var td=e.target.closest('.tk-done[data-tdone]');
+    if(td){ var c2=cards.filter(function(x){return x.id===td.getAttribute('data-tdone');})[0]; if(!c2) return; markTranslationDone(c2, td); return; }
+  });
+  // Resolve the Crowdin file id for a card: dashboard tasks → scanned files → on-demand scan.
+  function resolveFileId(c){
+    var d=crtasksMap[c.id]; if(d&&d.fileId) return Promise.resolve(d.fileId);
+    var f=(crFileProg[c.id]&&crFileProg[c.id][0])||(crFilesMap[c.id]&&crFilesMap[c.id][0]);
+    if(f&&f.fileId) return Promise.resolve(f.fileId);
+    return fetch('/api/crowdin-scan', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ ticket:c.ticket, codes:c.languages||[] }) })
+      .then(cjson).then(function(r){ var files=r.files||[]; if(files.length){ crFileProg[c.id]=files; return files[0].fileId; } return null; })
+      .catch(function(){ return null; });
+  }
+  function importTranslations(c, btn){
+    var tab = sheetTabs[c.id];
+    if(!tab){ toast('Send this card to a sheet first (→ Sheet).'); return; }
+    var url=localStorage.getItem(SHEET_URL_KEY);
+    if(!url){ url=prompt('Paste your Apps Script web-app /exec URL:',''); if(!url) return; url=url.trim(); localStorage.setItem(SHEET_URL_KEY, url); }
+    if(btn) btn.disabled=true;
+    toast('Finding the Crowdin file…', 9000);
+    resolveFileId(c).then(function(fileId){
+     if(!fileId){ toast('No Crowdin file found for <b>'+esc(c.ticket)+'</b>.'); if(btn) btn.disabled=false; return; }
+     toast('Fetching translations from Crowdin…', 9000);
+     fetch('/api/crowdin-translations', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ fileId:fileId, codes:c.languages||[] }) })
+      .then(cjson).then(function(res){
+        var rows=res.rows||[];
+        var filled=rows.reduce(function(a,r){ return a+Object.keys(r.cells||{}).length; },0);
+        if(!filled){ toast('No translations found in Crowdin yet for <b>'+esc(c.ticket)+'</b>.'); return; }
+        fetch(url, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({ mode:'importTranslations', spreadsheetId:tab.id, ip:c.ticket.split('-')[0], tab:c.ticket, rows:rows }) })
+          .then(function(){ toast('Imported <b>'+filled+'</b> translation cell(s) → '+esc(tab.name)+'. <a href="'+sheetUrlOf(tab.id)+'" target="_blank" rel="noreferrer">open sheet</a>'); })
+          .catch(function(err){ toast('Sheet write failed: '+esc(String(err.message||err))); });
+      })
+      .catch(function(err){ toast('Import failed: '+esc(String(err.message||err))); })
+      .then(function(){ if(btn) btn.disabled=false; });
+    });
+  }
+  // on load: ask the Apps Script which tabs actually exist (incl. ones created outside the dashboard),
+  // so the → Sheet/⤓ Import state is accurate. Safe — the server probes capabilities first.
+  var _redeployWarned=false;
+  function checkSheetTabs(){
+    var url=localStorage.getItem(SHEET_URL_KEY); if(!url) return;
+    var sheets=loadSheets(); if(!sheets.length) return;
+    var byId={}; sheets.forEach(function(s){ byId[s.id]=s.name; });
+    fetch('/api/sheet-tabs', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ url:url, ids:sheets.map(function(s){return s.id;}) }) })
+      .then(cjson).then(function(res){
+        if(res.needsRedeploy){ if(!_redeployWarned){ _redeployWarned=true; toast('Redeploy the Apps Script to enable live tab detection (Manage deployments ▸ New version).', 8000); } return; }
+        var tabs=res.tabs||{}, idx={};
+        Object.keys(tabs).forEach(function(sid){ (tabs[sid]||[]).forEach(function(nm){ idx[String(nm)]={ id:sid, name:byId[sid]||sid }; }); });
+        var changed=false;
+        cards.forEach(function(c){ var t=idx[c.ticket]; if(t){ var cur=sheetTabs[c.id]; if(!cur || cur.id!==t.id){ sheetTabs[c.id]=t; changed=true; } } });
+        if(changed){ try{ localStorage.setItem(STABS_KEY, JSON.stringify(sheetTabs)); }catch(e){} render(); }
+      }).catch(function(){});
+  }
+  function markTranslationDone(c, btn){
+    var d=crtasksMap[c.id]; if(!d) return;
+    if(d.proof && d.proof.length){ d.phase='proof'; saveCrtasks(c.id,d); render(); fetchTaskProgress(c); return; }
+    if(btn) btn.disabled=true;
+    toast('Creating proofreading tasks…', 9000);
+    var codes=(d.translate||[]).filter(function(t){return t.taskId;}).map(function(t){return t.code;}).filter(function(v,i,a){return a.indexOf(v)===i;});
+    fetch('/api/crowdin-tasks', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ fileId:d.fileId, title:c.title, codes:codes, type:1 }) })
+      .then(cjson).then(function(pr){ d.proof=pr.tasks||[]; d.phase='proof';
+        (d.proof||[]).forEach(function(t){ if(t.taskId!=null) progressMap[t.taskId]=t.percent; });
+        saveCrtasks(c.id,d); render();
+        var made=d.proof.filter(function(t){return t.taskId&&!t.skipped;}).length, sk=d.proof.filter(function(t){return t.skipped;}).length, err=d.proof.filter(function(t){return t.error;}).length;
+        toast('Created '+made+' proofreading task(s)'+(sk?', '+sk+' already existed':'')+(err?', '+err+' skipped (no translations yet)':'')+'.');
+        createAlphasForTasks(c, d.proof, 'proofreading'); })
+      .catch(function(err){ if(btn) btn.disabled=false; toast('Proofreading failed: '+esc(String(err.message||err))); });
+  }
+  document.getElementById('sheetList').addEventListener('click', function(e){
+    var pick=e.target.closest('.sheet-pick'); var del=e.target.closest('.sheet-del');
+    var list=loadSheets();
+    if(pick){ var s=list[+pick.getAttribute('data-i')]; if(s&&sheetCard) sendToSheet(sheetCard, s); return; }
+    if(del){ list.splice(+del.getAttribute('data-i'),1); saveSheets(list); renderSheetList(); return; }
+  });
+  document.getElementById('sheetAdd').addEventListener('click', function(){
+    var name=document.getElementById('sheetName').value.trim();
+    var id=sheetIdFrom(document.getElementById('sheetUrl').value);
+    if(!name || !id){ toast('Enter a name and a spreadsheet URL/ID.'); return; }
+    var list=loadSheets(); list.push({ name:name, id:id }); saveSheets(list);
+    document.getElementById('sheetName').value=''; document.getElementById('sheetUrl').value='';
+    renderSheetList();
+  });
+  document.getElementById('sheetUrlBtn').addEventListener('click', function(){
+    var cur=localStorage.getItem(SHEET_URL_KEY)||'';
+    var u=prompt('Apps Script web-app /exec URL (public "Anyone" deployment):', cur);
+    if(u===null) return;
+    u=u.trim();
+    if(u){ localStorage.setItem(SHEET_URL_KEY, u); toast('Apps Script URL saved.'); }
+    else { localStorage.removeItem(SHEET_URL_KEY); toast('Apps Script URL cleared.'); }
+  });
+  document.getElementById('sheetpopClose').addEventListener('click', closeSheetPicker);
+  document.getElementById('sheetpop').addEventListener('click', function(e){ if(e.target===this) closeSheetPicker(); });
   document.querySelector('thead').addEventListener('click', function(e){
     var th=e.target.closest('th.sortable'); if(!th) return;
     var k=th.getAttribute('data-sort');
     if(state.sort===k) state.dir=-state.dir; else { state.sort=k; state.dir=1; }
     render();
   });
+  // Done checkbox
   document.getElementById('rows').addEventListener('change', function(e){
     var box=e.target.closest('.chk'); if(!box) return;
-    var id=box.getAttribute('data-id'), kind=box.getAttribute('data-kind'), ts=Date.now();
-    var map = kind==='trans' ? transMap : kind==='lqadone' ? lqaMap : doneMap;
-    var save = kind==='trans' ? saveTrans : kind==='lqadone' ? saveLqaDone : saveDone;
-    if(box.checked) map[id]=ts; else delete map[id];
-    save();
-    if(kind==='done') box.closest('tr').classList.toggle('checked', box.checked); // only Done greys the row
+    var id=box.getAttribute('data-id'), ts=Date.now();
+    if(box.checked) doneMap[id]=ts; else delete doneMap[id];
+    saveDone();
+    box.closest('tr').classList.toggle('checked', box.checked); // only Done greys the row
     updateTitle(cards.filter(passes).length);
-    syncWrite(box.checked ? { kind:kind, id:id, ts:ts } : { kind:kind, id:id, remove:true });
+    syncWrite(box.checked ? { kind:'done', id:id, ts:ts } : { kind:'done', id:id, remove:true });
+  });
+  // Translation / LQA status dropdowns (shared)
+  document.getElementById('rows').addEventListener('change', function(e){
+    var sel=e.target.closest('.statsel'); if(!sel) return;
+    var id=sel.getAttribute('data-id'), kind=sel.getAttribute('data-kind'), val=sel.value;
+    var map = kind==='lqadone' ? lqaMap : transMap;
+    var save = kind==='lqadone' ? saveLqaDone : saveTrans;
+    if(val) map[id]=val; else delete map[id];
+    save();
+    sel.className='statsel statsel-'+(val||'none');
+    syncWrite(val ? { kind:kind, id:id, val:val } : { kind:kind, id:id, remove:true });
   });
 
   // ---- data source: live API (/api/wrike-cards) when hosted, else bundled data.js ----
@@ -524,7 +1269,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   function applyCards(newCards, generatedAt){
     cards = newCards || [];
     ips = Array.from(new Set(cards.map(ipOf))).sort();
-    reconcileLqa();
+    reconcileDone(); reconcileLqa();
     renderTabs(); render(); setTopOffset();
     updateUpdated(generatedAt);
     try { localStorage.setItem(CKEY, JSON.stringify(cards)); if(generatedAt) localStorage.setItem(MKEY, generatedAt); } catch(e){}
@@ -545,7 +1290,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     fetch('/api/wrike-cards', { cache:'no-store', headers:{ 'x-access-key': pw } })
       .then(function(r){ if(r.status===401) throw new Error('Wrong password'); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
       .then(function(j){ if(j.error) throw new Error(j.error);
-        KEY=pw; localStorage.setItem('bt.key', KEY); signout.style.display=''; hideLogin(); applyCards(j.cards||[], j.generatedAt); fetchState(); })
+        KEY=pw; localStorage.setItem('bt.key', KEY); signout.style.display=''; hideLogin(); applyCards(j.cards||[], j.generatedAt); fetchState(); checkSheetTabs(); scanCrowdinIndex(); loadManagers(); })
       .catch(function(err){ errEl.textContent = err.message || 'Sign-in failed'; })
       .then(function(){ btn.disabled=false; });
   });
@@ -556,7 +1301,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     var prev = upd.textContent; upd.textContent = 'Loading from Wrike…';
     return fetch('/api/wrike-cards', { cache:'no-store', headers: authHeaders() })
       .then(function(r){ if (r.status===401){ showLogin(); throw new Error('__AUTH__'); } if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
-      .then(function(j){ if (j.error) throw new Error(j.error); signout.style.display = KEY ? '' : 'none'; applyCards(j.cards || [], j.generatedAt); fetchState(); })
+      .then(function(j){ if (j.error) throw new Error(j.error); signout.style.display = KEY ? '' : 'none'; applyCards(j.cards || [], j.generatedAt); fetchState(); checkSheetTabs(); scanCrowdinIndex(); loadManagers(); })
       .catch(function(e){ if(String(e.message)!=='__AUTH__') upd.textContent = (prev && prev.indexOf('Updated')===0) ? prev : 'snapshot (offline)'; })
       .then(function(){ btn.disabled = false; btn.classList.remove('busy'); });
   }
@@ -568,8 +1313,11 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     if(!s) return;
     doneMap = s.done || {}; lqaDismiss = s.lqa || {}; transMap = s.trans || {}; lqaMap = s.lqadone || {};
     tagSeen = s.tagseen || {}; setBaseline(s.tagBaseline); delMap = s.deleted || {};
+    crtasksMap = {}; var _ct=s.crtasks||{}; Object.keys(_ct).forEach(function(k){ try{ crtasksMap[k]=JSON.parse(_ct[k]); }catch(e){} });
+    var _st=s.sheettab||{}; Object.keys(_st).forEach(function(k){ try{ sheetTabs[k]=JSON.parse(_st[k]); }catch(e){} });  // which cards have a sheet tab (shared, loaded on refresh)
+    if(s.linguists && s.linguists.map){ try{ linguists = JSON.parse(s.linguists.map)||{}; }catch(e){} }  // shared preferred-linguist table
     saveDone(); saveLqa(); saveTrans(); saveLqaDone(); saveTagSeen(); saveDel();   // keep the local cache mirrored
-    reconcileLqa();
+    reconcileDone(); reconcileLqa();
     render();
   }
   function postState(body){
@@ -618,6 +1366,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   window.addEventListener('resize', setTopOffset);
 
   // First paint from the bundled snapshot (instant, works offline)…
+  reconcileDone();  // uncheck Done if a newer tagged comment arrived after it was marked done
   reconcileLqa();   // bring back dismissed LQA tags if a newer LQA handoff arrived
   renderTabs();
   render();

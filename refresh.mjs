@@ -290,26 +290,30 @@ export async function refreshData(log = () => {}) {
     // languages = the whole group's codes (siblings sharing the master ref; a master card's group is
     // keyed by its own ticket), union any language list in this card's comments, falling back to its field.
     const key = role === 'master card' ? self : mref
-    // Prefer the auto-generated Localizations table; else fall back to sibling titles + comment codes.
     const ownRows = localizationRows(descById[task.id] || '')
+    // The "Copy localization" cards under this card's master (in the folder) are the source of truth.
+    const groupKey = mref || self
+    const locCards = []; const seenTk = new Set()
+    for (const s of (byOMP[groupKey] || [])) {
+      const tkk = ticket(s.title)
+      if (tkk === self || seenTk.has(tkk)) continue
+      if (!/copy\s*localization/i.test(s.title)) continue
+      const lang = NORM[titleCode(s.title)] || titleCode(s.title) || ''
+      if (!lang) continue
+      seenTk.add(tkk); locCards.push({ lang, ticket: tkk, url: s.permalink || '' })
+    }
+    // languages: from the copy-localization cards; else auto-table; else sibling titles + comment codes
     const raw = []
-    if (ownRows.length) { for (const r of ownRows) raw.push(r.lang) }
+    if (locCards.length) { for (const lc of locCards) raw.push(lc.lang) }
+    else if (ownRows.length) { for (const r of ownRows) raw.push(r.lang) }
     else {
       for (const s of (key && byOMP[key]) || []) { const c = titleCode(s.title); if (c) raw.push(c) }
       for (const c of fullComments) for (const code of langCodes(stripHtml(c.text))) raw.push(code)
     }
-    // Related localization cards for the expandable view (children if this is a parent, else siblings).
-    const isParent = ownRows.length > 0 || !mref
-    const groupKey = ownRows.length ? self : (mref || self)
-    const relItems = []; const seenId = new Set(); const seenTk = new Set()
-    if (ownRows.length) {
-      for (const r of ownRows) { const id = permId(r.url); if (id && seenId.has(id)) continue; if (id) seenId.add(id); relItems.push({ lang: r.lang, ticket: id ? (idToTicket[id] || '') : '', url: r.url }) }
-    } else {
-      for (const s of (byOMP[groupKey] || [])) { const tk = ticket(s.title); if (tk === self || seenTk.has(tk)) continue; const lang = NORM[titleCode(s.title)] || titleCode(s.title) || ''; if (!lang) continue; seenTk.add(tk); relItems.push({ lang, ticket: tk, url: s.permalink || '' }) }
-    }
-    // for a child card, list the card itself in its group too (marked), on top
-    if (mref && !relItems.some((i) => i.ticket === self)) { const selfLang = NORM[titleCode(title)] || titleCode(title) || ''; relItems.unshift({ lang: selfLang, ticket: self, url: task.permalink, self: true }) }
-    const related = { type: isParent ? 'children' : 'siblings', parent: isParent ? null : (mref || null), items: relItems }
+    // related dropdown: ONLY the copy-localization cards (no auto-table fallback)
+    const relItems = locCards.map((lc) => ({ lang: lc.lang, ticket: lc.ticket, url: lc.url }))
+    if (mref && relItems.length && !relItems.some((i) => i.ticket === self)) { const selfLang = NORM[titleCode(title)] || titleCode(title) || ''; relItems.unshift({ lang: selfLang, ticket: self, url: task.permalink, self: true }) }
+    const related = { type: mref ? 'siblings' : 'children', parent: mref || null, items: relItems }
     const strings = extractStrings(briefTexts)
     const src = raw.length ? raw : langCodes(cf(task, 'Language'))
     const langs = []

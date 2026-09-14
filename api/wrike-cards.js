@@ -162,29 +162,32 @@ export async function buildCards(token, lookbackDays) {
     // Role from the master ref, NOT the title: pointing at a parent = child; empty = top-level parent.
     const role = mref ? 'brief (de-facto master)' : 'master card'
     const key = role === 'master card' ? self : mref
-    // Prefer the auto-generated Localizations table; else fall back to sibling titles + comment codes.
     const ownRows = localizationRows(descById[task.id] || '')
+    // The "Copy localization" cards under this card's master (in the folder) are the source of truth.
+    const groupKey = mref || self
+    const locCards = []; const seenTk = new Set()
+    for (const s of (byOMP[groupKey] || [])) {
+      const tkk = ticket(s.title)
+      if (tkk === self || seenTk.has(tkk)) continue
+      if (!/copy\s*localization/i.test(s.title)) continue
+      if (!(s.responsibleIds || []).includes(ALPHA)) continue   // only copy-loc tickets assigned to Alpha Alconost
+      const lang = NORM[titleCode(s.title)] || titleCode(s.title) || ''
+      if (!lang) continue
+      seenTk.add(tkk); locCards.push({ lang, ticket: tkk, url: s.permalink || '', title: s.title, vest: cf(s, 'Vendor Estimate') })
+    }
+    // languages: from the copy-localization cards; else auto-table; else sibling titles + comment codes
     const raw = []
-    if (ownRows.length) { for (const r of ownRows) raw.push(r.lang) }
+    if (locCards.length) { for (const lc of locCards) raw.push(lc.lang) }
+    else if (ownRows.length) { for (const r of ownRows) raw.push(r.lang) }
     else {
       for (const s of (key && byOMP[key]) || []) { const c = titleCode(s.title); if (c) raw.push(c) }
       for (const text of commentTexts) for (const code of langCodes(stripHtml(text))) raw.push(code)
     }
-    // Related localization cards for the expandable view: a card with its own table (or no master
-    // ref) is treated as a parent → show its children; otherwise a leaf → show siblings (same parent).
-    const isParent = ownRows.length > 0 || !mref
-    const groupKey = ownRows.length ? self : (mref || self)
-    const relItems = []; const seenId = new Set(); const seenTk = new Set()
-    if (ownRows.length) {
-      // authoritative: the auto-generated table (one row per language sub-card)
-      for (const r of ownRows) { const id = permId(r.url); if (id && seenId.has(id)) continue; if (id) seenId.add(id); relItems.push({ lang: r.lang, ticket: id ? (idToTicket[id] || '') : '', url: r.url }) }
-    } else {
-      // fallback for cards with no table: folder siblings sharing the master ref, one per language ticket
-      for (const s of (byOMP[groupKey] || [])) { const tk = ticket(s.title); if (tk === self || seenTk.has(tk)) continue; const lang = NORM[titleCode(s.title)] || titleCode(s.title) || ''; if (!lang) continue; seenTk.add(tk); relItems.push({ lang, ticket: tk, url: s.permalink || '' }) }
-    }
-    // for a child card, list the card itself in its group too (marked), on top
-    if (mref && !relItems.some((i) => i.ticket === self)) { const selfLang = NORM[titleCode(title)] || titleCode(title) || ''; relItems.unshift({ lang: selfLang, ticket: self, url: task.permalink, self: true }) }
-    const related = { type: isParent ? 'children' : 'siblings', parent: isParent ? null : (mref || null), items: relItems }
+    // related dropdown: ONLY the copy-localization cards (no auto-table fallback)
+    const relItems = locCards.map((lc) => ({ lang: lc.lang, ticket: lc.ticket, url: lc.url, title: lc.title, vest: lc.vest }))
+    // Only add the "this card" chip when the card's own ticket is itself a copy-localization ticket.
+    if (mref && relItems.length && !relItems.some((i) => i.ticket === self) && /copy\s*localization/i.test(title)) { const selfLang = NORM[titleCode(title)] || titleCode(title) || ''; relItems.unshift({ lang: selfLang, ticket: self, url: task.permalink, title, self: true, vest: cf(task, 'Vendor Estimate') }) }
+    const related = { type: mref ? 'siblings' : 'children', parent: mref || null, items: relItems }
     const strings = extractStrings(briefTexts)
     const srcArr = raw.length ? raw : langCodes(cf(task, 'Language'))
     const dedup = []; for (const x of srcArr) { const y = NORM[x] || x; if (!dedup.includes(y)) dedup.push(y) }

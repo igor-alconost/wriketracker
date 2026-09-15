@@ -40,7 +40,8 @@ export async function readSource(url, id, tab) {
     const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ mode: 'readSource', spreadsheetId: String(id), tab: String(tab), ip: '' }), redirect: 'follow' })
     const j = await r.json().catch(() => null)
     if (!j || !j.ok) return { strings: [], error: (j && j.error) || 'read failed' }
-    return { strings: Array.isArray(j.strings) ? j.strings : [] }
+    // carry the per-row Context column through (the Drive link), used as the Crowdin string context
+    return { strings: Array.isArray(j.strings) ? j.strings : [], context: Array.isArray(j.context) ? j.context : [] }
   } catch (e) { return { strings: [], error: String((e && e.message) || e) } }
 }
 

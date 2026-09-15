@@ -35,7 +35,7 @@ body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
 .wrap{max-width:1760px;margin:0 auto;padding:0 28px 60px;}
 .wrap--head{padding:0 28px;}
 .tabs{display:flex;gap:4px;padding:14px 0 0;flex-wrap:wrap;}
-.headrow{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;}
+.headrow{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding-top:14px;}
 .headrow-btns{display:flex;gap:8px;align-items:center;}
 .mini-link{background:var(--surface);border:1.5px solid var(--faint);color:var(--muted);font-size:11px;line-height:1;
   padding:4px 9px;border-radius:7px;cursor:pointer;white-space:nowrap;margin-bottom:2px;}
@@ -175,7 +175,7 @@ td.langs{max-width:260px;font-family:var(--mono);font-size:11.5px;color:var(--mu
 .auto-step{display:flex;align-items:center;gap:8px;width:100%;min-height:64px;margin:0;padding:16px 18px;font:inherit;font-size:14px;font-weight:700;line-height:1.3;text-align:left;border:none;border-radius:14px;background:var(--hair2);color:var(--ink);cursor:pointer;box-shadow:0 1px 2px rgba(40,44,50,.06);transition:transform .12s ease,box-shadow .18s ease,filter .18s ease;}
 .auto-step:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 20px rgba(40,44,50,.17);filter:saturate(1.06);}
 .auto-step:active:not(:disabled){transform:translateY(0);box-shadow:none;}
-.auto-step:disabled{opacity:.45;cursor:not-allowed;}
+.auto-step:disabled{cursor:default;}
 /* each section its own colour: header + soft (top) & solid (bottom) buttons in that hue */
 .grp-sheet .auto-group{color:#15803d;border-bottom-color:#15803d;}
 .grp-crowdin .auto-group{color:#6d28d9;border-bottom-color:#6d28d9;}
@@ -189,6 +189,13 @@ td.langs{max-width:260px;font-family:var(--mono);font-size:11.5px;color:var(--mu
 .auto-step[data-act="tasks"]{background:#dbcdf8;color:#5620ad;}
 .auto-step[data-act="lqa-report"]{background:#fbeee2;color:#a24d1c;}
 .auto-step[data-act="lqa-alphas"]{background:#f5d9c2;color:#8a3a16;}
+/* disabled steps read as state: done (✓, green) vs locked (🔒, grey). Reason on hover (fixed tooltip). */
+.auto-wrap{position:relative;display:block;width:100%;}
+.auto-step.done{background:#e9f7ef;color:#15803d;box-shadow:0 1px 2px rgba(40,44,50,.06);}
+.auto-step.locked{background:#f1f3f6;color:#8a93a0;box-shadow:none;}
+.auto-ico{margin-left:auto;font-size:13px;opacity:.85;flex:none;}
+#autoTip{position:fixed;z-index:1000;max-width:230px;background:#1c2531;color:#fff;font-size:11.5px;font-weight:500;line-height:1.35;padding:7px 10px;border-radius:8px;box-shadow:0 8px 22px rgba(20,30,45,.25);opacity:0;pointer-events:none;transition:opacity .12s ease;transform:translateY(2px);}
+#autoTip.show{opacity:1;transform:none;}
 .auto-hint{font-size:11.5px;color:var(--muted);margin-top:-2px;}
 .auto-link{display:inline-block;font-size:12px;font-weight:600;color:var(--link);text-decoration:none;margin:-2px 0 2px;}
 .auto-link:hover{text-decoration:underline;}
@@ -265,6 +272,9 @@ tr.detail .tk-refresh:hover{color:var(--ink);border-color:var(--link);}
 .tk-lang{font-weight:700;min-width:56px;color:var(--ink);}
 .tk-batch{font-size:10px;font-weight:600;color:var(--lqa);background:var(--lqa-bg);border:1px solid var(--lqa);border-radius:5px;padding:1px 5px;white-space:nowrap;}
 .tk-skip{font-size:10px;font-weight:600;color:var(--muted);background:var(--hair2);border:1px solid var(--hair);border-radius:5px;padding:1px 5px;white-space:nowrap;}
+.tk-issue{font-size:10px;font-weight:700;color:var(--crit);background:#fdecea;border:1px solid var(--crit);border-radius:5px;padding:1px 5px;white-space:nowrap;text-decoration:none;}
+.tk-issue:hover{filter:brightness(.96);}
+.tk-ihead{font-size:11px;font-weight:600;color:var(--crit);margin:2px 0 4px;}
 .tk-prog{display:flex;align-items:center;gap:7px;min-width:130px;}
 .tk-bar{display:inline-block;width:80px;height:7px;border-radius:4px;background:var(--hair);overflow:hidden;}
 .tk-bar>span{display:block;height:100%;background:var(--ok);}
@@ -527,10 +537,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   var ips = Array.from(new Set(cards.map(ipOf))).sort();
   function tabBtn(id,label,count){ return '<button class="tab'+(state.tab===id?' on':'')+'" data-tab="'+esc(id)+'">'+esc(label)+' <span class="badge">'+count+'</span></button>'; }
   function renderTabs(){
-    var vis = cards.filter(function(c){ return !isDeleted(c); });
-    var html = tabBtn('all','All',vis.length);
-    ips.forEach(function(i){ html += tabBtn(i,i,vis.filter(function(c){return ipOf(c)===i;}).length); });
-    document.getElementById('tabs').innerHTML = html;
+    // single tabless page — no project tabs; state.tab stays 'all' so every card shows
+    document.getElementById('tabs').innerHTML = '';
   }
 
   function passes(c){
@@ -914,18 +922,22 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     document.getElementById('autopopTitle').textContent = c.ticket+' — Automate';
     var hasTab=!!sheetTabs[c.id];
     var d=crtasksMap[c.id]; var hasFile=!!(d&&d.fileId)||hasCrFiles(c);   // dashboard-created OR scanned file
-    function B(act,label,disabled,hint){
-      return '<button class="auto-step" data-act="'+act+'" data-id="'+esc(c.id)+'"'+(disabled?' disabled':'')+'>'+label+'</button>'
-        + (disabled&&hint?'<div class="auto-hint">'+esc(hint)+'</div>':'');
+    function B(act,label,disabled,hint,kind){
+      if(!disabled) return '<button class="auto-step" data-act="'+act+'" data-id="'+esc(c.id)+'">'+label+'</button>';
+      var k=(kind==='done')?'done':'locked', ico=(k==='done')?'✓':'🔒';
+      // disabled buttons read as STATE (done/locked); the reason shows on hover (fixed tooltip, no clipping)
+      return '<span class="auto-wrap" data-tip="'+esc(hint||'')+'">'
+        + '<button class="auto-step '+k+'" data-act="'+act+'" data-id="'+esc(c.id)+'" disabled>'
+        + label+'<span class="auto-ico">'+ico+'</span></button></span>';
     }
     document.getElementById('autopopBody').innerHTML =
       '<div class="auto-cols">'
       + '<div class="auto-col grp-sheet"><div class="auto-group">Sheet</div>'
-        + B('sheet','Create spreadsheet tab', hasTab, 'A tab already exists for this card.')
-        + B('import','Import translations into sheet', !hasTab, 'Create the spreadsheet tab first.')
+        + B('sheet','Create tab', hasTab, 'A tab already exists for this card.', 'done')
+        + B('import','Import translations', !hasTab, 'Create the spreadsheet tab first.')
       + '</div>'
       + '<div class="auto-col grp-crowdin"><div class="auto-group">Crowdin</div>'
-        + B('file',(hasFile?'Re-upload source to Crowdin':'Upload source to Crowdin'), !hasTab, 'Create the spreadsheet tab first — the source is read from the tab.')
+        + B('file',(hasFile?'Re-upload source':'Upload source'), !hasTab, 'Create the spreadsheet tab first — the source is read from the tab.')
         + B('tasks','Create tasks + alphas', !hasFile, 'Upload the source to Crowdin first.')
       + '</div>'
       + '<div class="auto-col grp-lqa"><div class="auto-group">LQA</div>'
@@ -936,7 +948,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
       + '</div>';
     document.getElementById('autopop').style.display='flex';
   }
-  function closeAutomate(){ document.getElementById('autopop').style.display='none'; }
+  function closeAutomate(){ document.getElementById('autopop').style.display='none'; hideAutoTip(); }
   document.getElementById('rows').addEventListener('click', function(e){
     var a=e.target.closest('.automate-btn'); if(!a) return;
     openAutomate(a.getAttribute('data-automate'));
@@ -952,6 +964,22 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     else if(act==='lqa-report') makeLqaReport(c, btn);
     else if(act==='lqa-alphas') makeLqaAlphas(c, btn);
   });
+  // hover tooltip for disabled steps — a fixed-position bubble so the modal's overflow never clips it
+  var autoTipEl=null;
+  function autoTip(){ if(!autoTipEl){ autoTipEl=document.createElement('div'); autoTipEl.id='autoTip'; document.body.appendChild(autoTipEl); } return autoTipEl; }
+  function showAutoTip(w){
+    var msg=w.getAttribute('data-tip')||''; if(!msg){ hideAutoTip(); return; }
+    var t=autoTip(); t.textContent=msg; t.classList.add('show');
+    var r=w.getBoundingClientRect(), tw=t.offsetWidth, th=t.offsetHeight;
+    var left=Math.min(Math.max(8, r.left), window.innerWidth-8-tw);
+    var top=r.top-th-8; if(top<8) top=r.bottom+8;              // flip below if no room above
+    t.style.left=left+'px'; t.style.top=top+'px';
+  }
+  function hideAutoTip(){ if(autoTipEl) autoTipEl.classList.remove('show'); }
+  var _autoBody=document.getElementById('autopopBody');
+  _autoBody.addEventListener('mouseover', function(e){ var w=e.target.closest('.auto-wrap'); if(w) showAutoTip(w); });
+  _autoBody.addEventListener('mouseout', function(e){ var w=e.target.closest('.auto-wrap'); if(w && !w.contains(e.relatedTarget)) hideAutoTip(); });
+  _autoBody.addEventListener('scroll', hideAutoTip);
   // ---- LQA: report spreadsheet + review alphas ----
   function lqaAssetsUrl(c){   // the Google Drive review-assets link from the LQA comment(s)
     var texts=(c.lqaComments||[]).map(function(x){return x.text||'';}).join('\n');
@@ -1162,14 +1190,18 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     var multi=files.length>1;
     return files.map(function(f){
       var sub = multi ? '<div class="tk-subhead"><a href="'+esc(f.url)+'" target="_blank" rel="noreferrer" title="'+esc(f.name)+'">'+esc(f.title||f.name)+' ↗</a></div>' : '';
+      // file-level unresolved-issue banner (includes issues on the source string, not tied to a language)
+      var ihead = (f.issues>0) ? '<div class="tk-ihead">⚠ '+f.issues+' unresolved issue'+(f.issues===1?'':'s')+' raised by linguists</div>' : '';
       var rows = (prog && f.langs) ? f.langs.map(function(l){
           var lu=l.editorUrl||f.url;   // per-language Crowdin editor link
+          var iss=(l.issues>0) ? '<a class="tk-issue" href="'+esc(lu)+'" target="_blank" rel="noreferrer" title="'+l.issues+' unresolved issue(s) in '+esc(l.code)+' — open in editor">⚠ '+l.issues+'</a>' : '';
           return '<div class="tk-row"><span class="tk-lang">'+esc(l.code)+'</span>'
             + '<span class="tk-prog"><span class="tk-bar"><span style="width:'+l.translation+'%"></span></span><span class="tk-pct">'+l.translation+'%</span></span>'
+            + iss
             + '<a class="tk-open" href="'+esc(lu)+'" target="_blank" rel="noreferrer">open ↗</a>'
             + '<button class="tk-copy" data-copy="'+esc(lu)+'" title="Copy editor link">copy</button></div>';
         }).join('') : '<div class="tk-row muted">scanning progress…</div>';
-      return sub+rows;
+      return sub+ihead+rows;
     }).join('');
   }
   function tasksInnerHtml(c){

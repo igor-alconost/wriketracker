@@ -70,7 +70,10 @@ export async function upsertCrowdinFile(token, ticket, strings, folder, context)
     const f = await api('POST', `/projects/${PROJECT}/files`, { storageId, name, title: ticket, directoryId: dir.id, type: 'csv', importOptions: { firstLineContainsHeader: true, importTranslations: false, scheme } })
     fileId = f.data.id; created = true
   }
-  return { fileId, created, folder: 'Google Sheets/' + dirName, url: `https://crowdin.com/editor/${PROJECT}/${fileId}` }
+  // The editor URL needs the project slug (identifier), not the numeric id, to resolve.
+  let slug = String(PROJECT)
+  try { slug = (await api('GET', `/projects/${PROJECT}`)).data.identifier || slug } catch { /* fall back to id */ }
+  return { fileId, created, folder: 'Google Sheets/' + dirName, url: `https://crowdin.com/editor/${slug}/${fileId}/` }
 }
 
 export default async function handler(req, res) {

@@ -56,7 +56,7 @@ http
           const body = JSON.parse(raw || '{}')
           const token = readCrowdinToken()
           if (!token) { res.writeHead(500, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'Crowdin token not set' })); return }
-          const result = await upsertCrowdinFile(token, String(body.ticket || '').trim(), body.strings || [], body.folder)
+          const result = await upsertCrowdinFile(token, String(body.ticket || '').trim(), body.strings || [], body.folder, body.context || [])
           res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(result))
         } catch (e) { res.writeHead(500, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: String(e.message || e) })) }
       })

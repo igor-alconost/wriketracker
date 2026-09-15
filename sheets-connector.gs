@@ -75,12 +75,15 @@ function doPost(e) {
       var rLastCol = rsheet.getLastColumn(), rLastRow = rsheet.getLastRow();
       if (rLastRow < 2 || rLastCol < 1) return _json({ ok: true, strings: [] });
       var rHead = rsheet.getRange(1, 1, 1, rLastCol).getValues()[0];
-      var srcCol = 0;
-      for (var si = 0; si < rHead.length; si++) { if (String(rHead[si]).trim().toLowerCase() === 'original content') { srcCol = si + 1; break; } }
+      var srcCol = 0, rCtxCol = 0;
+      for (var si = 0; si < rHead.length; si++) { var hn = String(rHead[si]).trim().toLowerCase(); if (hn === 'original content') srcCol = si + 1; if (hn === 'context') rCtxCol = si + 1; }
       if (!srcCol) return _json({ ok: false, error: 'no "Original content" column in ' + p.tab });
       var col = rsheet.getRange(2, srcCol, rLastRow - 1, 1).getValues().map(function (r) { return String(r[0] == null ? '' : r[0]); });
       while (col.length && String(col[col.length - 1]).trim() === '') col.pop(); // drop trailing blanks
-      return _json({ ok: true, strings: col });
+      // Context column (per row, aligned with the source strings) — e.g. the review-assets link.
+      var ctxArr = [];
+      if (rCtxCol && col.length) ctxArr = rsheet.getRange(2, rCtxCol, col.length, 1).getValues().map(function (r) { return String(r[0] == null ? '' : r[0]); });
+      return _json({ ok: true, strings: col, context: ctxArr });
     }
 
     // Upload a Wrike attachment to Drive (subfolder = ticket) and put its shareable link in the

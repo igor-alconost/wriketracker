@@ -26,15 +26,16 @@ export function readCrowdinToken() {
 }
 
 const csvEsc = (s) => '"' + String(s == null ? '' : s).replace(/"/g, '""') + '"'
-function buildCsv(ticket, strings) {
+function buildCsv(ticket, strings, context) {
   const cols = ['identifier', 'context', 'source', ...TARGETS]
   const list = (strings && strings.length) ? strings : ['']
+  const ctx = context || []
   const rows = [cols.join(',')]
-  list.forEach((s, i) => rows.push([csvEsc(ticket + '-' + (i + 1)), csvEsc(''), csvEsc(s), ...TARGETS.map(() => csvEsc(''))].join(',')))
+  list.forEach((s, i) => rows.push([csvEsc(ticket + '-' + (i + 1)), csvEsc(ctx[i] || ''), csvEsc(s), ...TARGETS.map(() => csvEsc(''))].join(',')))
   return rows.join('\n') + '\n'
 }
 
-export async function upsertCrowdinFile(token, ticket, strings, folder) {
+export async function upsertCrowdinFile(token, ticket, strings, folder, context) {
   const auth = { Authorization: 'Bearer ' + token }
   const api = async (m, p, obj) => {
     const r = await fetch(BASE + p, { method: m, headers: { ...auth, ...(obj ? { 'Content-Type': 'application/json' } : {}) }, body: obj ? JSON.stringify(obj) : undefined })
@@ -43,7 +44,7 @@ export async function upsertCrowdinFile(token, ticket, strings, folder) {
     return j
   }
   // 1) upload the CSV to storage
-  const sres = await fetch(BASE + '/storages', { method: 'POST', headers: { ...auth, 'Crowdin-API-FileName': ticket + '.csv', 'Content-Type': 'text/csv; charset=utf-8' }, body: buildCsv(ticket, strings) })
+  const sres = await fetch(BASE + '/storages', { method: 'POST', headers: { ...auth, 'Crowdin-API-FileName': ticket + '.csv', 'Content-Type': 'text/csv; charset=utf-8' }, body: buildCsv(ticket, strings, context) })
   if (sres.status >= 400) throw new Error('Crowdin storage → ' + sres.status)
   const storageId = (await sres.json()).data.id
 
@@ -82,7 +83,7 @@ export default async function handler(req, res) {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {})
     const ticket = String(body.ticket || '').trim()
     if (!ticket) { res.status(400).json({ error: 'ticket required' }); return }
-    res.status(200).json(await upsertCrowdinFile(token, ticket, body.strings || [], body.folder))
+    res.status(200).json(await upsertCrowdinFile(token, ticket, body.strings || [], body.folder, body.context || []))
   } catch (e) {
     res.status(500).json({ error: String((e && e.message) || e) })
   }

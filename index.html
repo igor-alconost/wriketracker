@@ -847,9 +847,10 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     if(!folder){ toast('Send this card to a sheet first (to choose the batch).'); return; }
     if(b) b.disabled=true;
     toast('Creating/updating the Crowdin file for <b>'+esc(c.ticket)+'</b>…', 9000);
-    fetchSheetSource(c).then(function(sheetStrings){
-      var strings=(sheetStrings&&sheetStrings.length)?sheetStrings:(c.strings||[]);
-      fetch('/api/crowdin-file', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ ticket:c.ticket, strings:strings, folder:folder }) })
+    fetchSheetSource(c).then(function(src){
+      var strings=(src&&src.strings&&src.strings.length)?src.strings:(c.strings||[]);
+      var context=(src&&src.context)||[];
+      fetch('/api/crowdin-file', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ ticket:c.ticket, strings:strings, folder:folder, context:context }) })
         .then(cjson).then(function(f){
           var dd = crtasksMap[c.id] || { fileId:null, folder:'', translate:[], proof:[], proofDesired:undefined, phase:'translate', srcCount:0, taskedCount:0, newIter:0 };
           dd.fileId=f.fileId; dd.folder=f.folder; dd.srcCount=strings.length;
@@ -1033,7 +1034,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     return fetch('/api/sheet-tabs', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ op:'readSource', url:url, id:tab.id, tab:c.ticket }) })
       .then(cjson).then(function(res){
         if(res.needsRedeploy){ if(!_redeployWarned){ _redeployWarned=true; toast('Redeploy the Apps Script to read source from the sheet (Manage deployments ▸ New version).', 8000); } return null; }
-        return Array.isArray(res.strings) ? res.strings : null;
+        if(!Array.isArray(res.strings)) return null;
+        return { strings:res.strings, context:(Array.isArray(res.context)?res.context:[]) };
       }).catch(function(){ return null; });
   }
   function cjson(r){ return r.json().then(function(j){ if(!r.ok || (j&&j.error)) throw new Error((j&&j.error)||'request failed'); return j; }); }

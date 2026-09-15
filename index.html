@@ -1267,7 +1267,12 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
         var tabs=res.tabs||{}, idx={};
         Object.keys(tabs).forEach(function(sid){ (tabs[sid]||[]).forEach(function(nm){ idx[String(nm)]={ id:sid, name:byId[sid]||sid }; }); });
         var changed=false;
-        cards.forEach(function(c){ var t=idx[c.ticket]; if(t){ var cur=sheetTabs[c.id]; if(!cur || cur.id!==t.id){ sheetTabs[c.id]=t; changed=true; } } });
+        cards.forEach(function(c){
+          var t=idx[c.ticket], cur=sheetTabs[c.id];
+          if(t){ if(!cur || cur.id!==t.id){ sheetTabs[c.id]=t; changed=true; } }
+          // tab was deleted from its spreadsheet (that spreadsheet was probed, ticket no longer a tab) → clear it
+          else if(cur && tabs[cur.id]){ delete sheetTabs[c.id]; changed=true; try{ syncWrite({ kind:'sheettab', id:c.id, remove:true }); }catch(e){} }
+        });
         if(changed){ try{ localStorage.setItem(STABS_KEY, JSON.stringify(sheetTabs)); }catch(e){} render(); }
       }).catch(function(){});
   }

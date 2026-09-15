@@ -163,8 +163,9 @@ export async function buildCards(token, lookbackDays) {
     const role = mref ? 'brief (de-facto master)' : 'master card'
     const key = role === 'master card' ? self : mref
     const ownRows = localizationRows(descById[task.id] || '')
-    // The "Copy localization" cards under this card's master (in the folder) are the source of truth.
-    const groupKey = mref || self
+    // The "Copy localization" cards for a task point their Original Master Project at that task
+    // itself (self), NOT at the shared master — so look them up by self, not mref.
+    const groupKey = self
     const locCards = []; const seenTk = new Set()
     for (const s of (byOMP[groupKey] || [])) {
       const tkk = ticket(s.title)
@@ -187,7 +188,7 @@ export async function buildCards(token, lookbackDays) {
     const relItems = locCards.map((lc) => ({ lang: lc.lang, ticket: lc.ticket, url: lc.url, title: lc.title, vest: lc.vest }))
     // Only add the "this card" chip when the card's own ticket is itself a copy-localization ticket.
     if (mref && relItems.length && !relItems.some((i) => i.ticket === self) && /copy\s*localization/i.test(title)) { const selfLang = NORM[titleCode(title)] || titleCode(title) || ''; relItems.unshift({ lang: selfLang, ticket: self, url: task.permalink, title, self: true, vest: cf(task, 'Vendor Estimate') }) }
-    const related = { type: mref ? 'siblings' : 'children', parent: mref || null, items: relItems }
+    const related = { type: 'children', parent: self, items: relItems }   // the card's own copy-loc tickets
     const strings = extractStrings(briefTexts)
     const srcArr = raw.length ? raw : langCodes(cf(task, 'Language'))
     const dedup = []; for (const x of srcArr) { const y = NORM[x] || x; if (!dedup.includes(y)) dedup.push(y) }

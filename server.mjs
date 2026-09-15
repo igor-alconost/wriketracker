@@ -118,7 +118,7 @@ http
       const auth = checkAuth(req.headers['x-access-key'])
       if (!auth.ok) { res.writeHead(auth.code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: auth.error })); return }
       const STATE_FILE = path.join(ROOT, '.state.json')
-      const KINDS = ['done', 'lqa', 'trans', 'lqadone', 'tagseen', 'deleted', 'crtasks', 'sheettab', 'linguists']
+      const KINDS = ['done', 'lqa', 'trans', 'lqadone', 'tagseen', 'deleted', 'crtasks', 'sheettab', 'linguists', 'appsurl', 'feedback']
       const readState = () => {
         let s; try { s = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')) } catch { s = {} }
         for (const k of KINDS) s[k] = s[k] || {}

@@ -17,6 +17,7 @@ const PROJECT_NAME = 'monopoly go'   // create_alpha resolves the project by NAM
 const SERVICE = 'min'
 const SOURCE = 'en'
 const VOLUME = '1'
+const CURRENCY = 'EUR'
 
 // Preferred linguists (execId per language, per stage) live in the shared state store and are
 // edited in the dashboard's "Linguists" table. The client sends the resolved execId per item;
@@ -112,7 +113,7 @@ export async function createAlphas(key, items) {
     if (!execId) { out.push({ code: it.code, target, stage, skipped: 'no-linguist' }); continue }
     const args = {
       customerId: CUSTOMER_ID, projectName: PROJECT_NAME, projectUrl: String(it.url || ''),
-      description: String(it.description || ''), service: SERVICE, source: SOURCE, target, volume: VOLUME, execId
+      description: String(it.description || ''), service: SERVICE, source: SOURCE, target, volume: VOLUME, execId, currency: CURRENCY
     }
     if (it.tags) args.tags = String(it.tags)   // space-separated hashtags, e.g. "#MPY-83617 #loc"
     try {

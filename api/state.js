@@ -34,11 +34,11 @@ async function ensureTable(sql) {
   _ready = true
 }
 
-const KINDS = new Set(['done', 'lqa', 'trans', 'lqadone', 'tagseen', 'deleted', 'crtasks', 'sheettab', 'linguists'])
+const KINDS = new Set(['done', 'lqa', 'trans', 'lqadone', 'tagseen', 'deleted', 'crtasks', 'sheettab', 'linguists', 'appsurl', 'feedback'])
 
 async function readAll(sql) {
   const rows = await sql`SELECT kind, card_id, ts, val FROM bt_state`
-  const out = { done: {}, lqa: {}, trans: {}, lqadone: {}, tagseen: {}, deleted: {}, crtasks: {}, sheettab: {}, linguists: {} }
+  const out = { done: {}, lqa: {}, trans: {}, lqadone: {}, tagseen: {}, deleted: {}, crtasks: {}, sheettab: {}, linguists: {}, appsurl: {}, feedback: {} }
   let baseline = null
   for (const r of rows) {
     if (r.kind === 'meta') { if (r.card_id === 'tagBaseline') baseline = Number(r.ts); continue }

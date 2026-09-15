@@ -192,6 +192,19 @@ td.langs{max-width:260px;font-family:var(--mono);font-size:11.5px;color:var(--mu
 .auto-hint{font-size:11.5px;color:var(--muted);margin-top:-2px;}
 .auto-link{display:inline-block;font-size:12px;font-weight:600;color:var(--link);text-decoration:none;margin:-2px 0 2px;}
 .auto-link:hover{text-decoration:underline;}
+.fb-fab{position:fixed;right:20px;bottom:20px;z-index:60;background:var(--brief);color:#fff;border:none;border-radius:22px;padding:10px 16px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 5px 16px rgba(40,44,50,.24);}
+.fb-fab:hover{filter:brightness(1.07);transform:translateY(-1px);}
+.fb-text{width:100%;box-sizing:border-box;border:1px solid var(--hair);border-radius:9px;padding:10px 12px;font:inherit;font-size:13px;resize:vertical;}
+.fb-actions{display:flex;justify-content:flex-end;margin:8px 0 14px;}
+.fb-submit{background:var(--brief);color:#fff;border:none;border-radius:8px;padding:8px 20px;font-weight:600;cursor:pointer;}
+.fb-submit:hover{filter:brightness(1.06);}
+.fb-list{display:flex;flex-direction:column;gap:8px;max-height:320px;overflow:auto;}
+.fb-item{border:1px solid var(--hair);border-radius:9px;padding:9px 11px;background:var(--hair2);}
+.fb-meta{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:var(--muted);margin-bottom:4px;}
+.fb-del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:12px;line-height:1;padding:0 2px;}
+.fb-del:hover{color:var(--crit);}
+.fb-txt{font-size:13px;color:var(--ink);white-space:pre-wrap;word-break:break-word;line-height:1.4;}
+.fb-empty{font-size:12px;color:var(--muted);padding:6px 0;}
 .mgr-list{display:flex;gap:14px;padding:16px 4px 10px;}
 .mgr-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:10px;background:var(--surface);border:1.5px solid var(--hair);border-radius:14px;padding:22px 14px 18px;font:inherit;cursor:pointer;position:relative;transition:transform .1s ease,box-shadow .16s ease,border-color .16s ease;}
 .mgr-item:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(40,44,50,.14);border-color:var(--link);}
@@ -347,6 +360,17 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   </div>
 </div>
 <div class="toast" id="toast"></div>
+<button id="fbBtn" class="fb-fab" title="Report a bug or suggest an improvement">💬 Feedback</button>
+<div class="modal" id="fbpop" style="display:none">
+  <div class="modal-card">
+    <div class="modal-head"><b>Bugs &amp; suggestions</b><button class="modal-x" id="fbClose" title="Close">✕</button></div>
+    <div class="modal-body">
+      <textarea id="fbText" class="fb-text" rows="3" placeholder="Describe the bug or suggest an improvement…"></textarea>
+      <div class="fb-actions"><button id="fbSubmit" class="fb-submit">Submit</button></div>
+      <div id="fbList" class="fb-list"></div>
+    </div>
+  </div>
+</div>
 <div class="modal" id="msgpop" style="display:none">
   <div class="modal-card">
     <div class="modal-head"><b id="msgpopTitle">Tagged message</b><button class="modal-x" id="msgpopClose" title="Close">✕</button></div>
@@ -647,6 +671,33 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   document.getElementById('lingClose').addEventListener('click', closeLinguists);
   document.getElementById('lingSave').addEventListener('click', saveLinguists);
   document.getElementById('lingpop').addEventListener('click', function(e){ if(e.target===this) closeLinguists(); });
+  // ---- Feedback (bugs & suggestions), saved to the shared state store (kind 'feedback') ----
+  var feedback={};
+  function fbDate(ms){ try{ return new Date(Number(ms)).toLocaleString(undefined,{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }catch(e){ return ''; } }
+  function fbListHtml(){
+    var ids=Object.keys(feedback).sort(function(a,b){ return Number(b)-Number(a); });
+    if(!ids.length) return '<div class="fb-empty">No feedback yet.</div>';
+    return ids.map(function(id){ var f; try{ f=JSON.parse(feedback[id]); }catch(e){ f={ text:String(feedback[id]), date:Number(id) }; }
+      return '<div class="fb-item"><div class="fb-meta"><span>'+esc(fbDate(f.date||id))+'</span><button class="fb-del" data-fb="'+esc(id)+'" title="Remove">✕</button></div><div class="fb-txt">'+esc(f.text||'')+'</div></div>';
+    }).join('');
+  }
+  function refreshFbList(){ if(document.getElementById('fbpop').style.display==='flex') document.getElementById('fbList').innerHTML=fbListHtml(); }
+  function openFeedback(){ document.getElementById('fbList').innerHTML=fbListHtml(); document.getElementById('fbpop').style.display='flex'; try{ document.getElementById('fbText').focus(); }catch(e){} }
+  function closeFeedback(){ document.getElementById('fbpop').style.display='none'; }
+  document.getElementById('fbBtn').addEventListener('click', openFeedback);
+  document.getElementById('fbClose').addEventListener('click', closeFeedback);
+  document.getElementById('fbpop').addEventListener('click', function(e){ if(e.target===this) closeFeedback(); });
+  document.getElementById('fbSubmit').addEventListener('click', function(){
+    var el=document.getElementById('fbText'); var t=(el.value||'').trim(); if(!t){ el.focus(); return; }
+    var id=String(Date.now()); var val=JSON.stringify({ text:t, date:Date.now() });
+    feedback[id]=val; syncWrite({ kind:'feedback', id:id, val:val });
+    el.value=''; document.getElementById('fbList').innerHTML=fbListHtml(); toast('Thanks — feedback saved.');
+  });
+  document.getElementById('fbList').addEventListener('click', function(e){
+    var d=e.target.closest('.fb-del[data-fb]'); if(!d) return;
+    var id=d.getAttribute('data-fb'); delete feedback[id]; syncWrite({ kind:'feedback', id:id, remove:true });
+    document.getElementById('fbList').innerHTML=fbListHtml();
+  });
   // click the LQA pill's ✕ (or the pill) to dismiss it; remembered until a newer LQA comment
   document.getElementById('rows').addEventListener('click', function(e){
     var x=e.target.closest('.pill.lqa .x'); if(!x) return;
@@ -691,10 +742,14 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   function closeMsg(){ document.getElementById('msgpop').style.display='none'; }
   document.getElementById('msgpopClose').addEventListener('click', closeMsg);
   document.getElementById('msgpop').addEventListener('click', function(e){ if(e.target===this) closeMsg(); });
-  document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ closeMsg(); closeSheetPicker(); closeLocModal(); closeAtt(); closeMgr(); } });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ closeMsg(); closeSheetPicker(); closeLocModal(); closeAtt(); closeMgr(); closeFeedback(); } });
 
   // ---- "→ Sheet": pick a spreadsheet, then push a card to it via the Apps Script web app ----
   var SHEET_URL_KEY='briefTracker.sheetUrl', SHEETS_KEY='briefTracker.sheets';
+  // Apps Script URL is shared across users via the state store (kind 'appsurl'), cached in localStorage.
+  function setAppsUrl(url){ url=String(url||'').trim();
+    if(url){ try{localStorage.setItem(SHEET_URL_KEY, url);}catch(e){} syncWrite({ kind:'appsurl', id:'url', val:url }); }
+    else { try{localStorage.removeItem(SHEET_URL_KEY);}catch(e){} syncWrite({ kind:'appsurl', id:'url', remove:true }); } }
   var DRIVE_PARENT='1CDbSwAf9_9Uu5EWFS_Sypuut-d92cFaQ';   // parent Drive folder for <ticket> attachment subfolders
   var LQA_FOLDER='1IC51iCJPoa8bkOEk130lGOZeWEXw3pFT';     // folder where LQA Report spreadsheets are created
   function loadSheets(){
@@ -742,7 +797,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     var url=localStorage.getItem(SHEET_URL_KEY);
     if(!url){
       url=prompt('One-time: paste your Apps Script web-app URL\n(Deploy sheets-connector.gs, then paste the /exec URL here):','');
-      if(!url) return; url=url.trim(); localStorage.setItem(SHEET_URL_KEY, url);
+      if(!url) return; url=url.trim(); setAppsUrl(url);
     }
     rememberBatch(c.ticket, sheet.name); rememberTab(c.id, sheet);
     var payload={ spreadsheetId:sheet.id, ip:c.ticket.split('-')[0], tab:c.ticket, projectName:c.title, link:c.permalink||'', langCodes:c.languages||[], strings:c.strings||[] };
@@ -926,11 +981,33 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
         if(b) b.disabled=false;
       }).catch(function(err){ toast('LQA Report failed: '+esc(String(err.message||err))); if(b) b.disabled=false; });
   }
+  // Per-language Crowdin link for a card: the translation/proofreading task webUrl if there is one,
+  // else the per-language file editor link from the scan; '' if neither.
+  function crowdinLinkFor(c, code){
+    var U=String(code).toUpperCase(), d=crtasksMap[c.id];
+    if(d){
+      var t=(d.translate||[]).concat(d.proof||[]).filter(function(x){ return x.taskId && x.url && String(x.code).toUpperCase()===U; })[0];
+      if(t) return t.url;
+    }
+    var files=crFileProg[c.id]||[];
+    for(var i=0;i<files.length;i++){ var lg=(files[i].langs||[]).filter(function(l){ return String(l.code).toUpperCase()===U; })[0]; if(lg&&lg.editorUrl) return lg.editorUrl; }
+    return '';
+  }
+  // Make sure per-language file editor links are available (scan once if not loaded and no task links).
+  function ensureCrowdinLinks(c){
+    var d=crtasksMap[c.id];
+    var hasTaskUrls = d && (d.translate||[]).concat(d.proof||[]).some(function(x){ return x.taskId && x.url; });
+    if(hasTaskUrls || (crFileProg[c.id] && crFileProg[c.id].length)) return Promise.resolve();
+    return fetch('/api/crowdin-scan', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ ticket:c.ticket, codes:c.languages||[] }) })
+      .then(cjson).then(function(r){ crFileProg[c.id]=r.files||[]; }).catch(function(){});
+  }
   function makeLqaAlphas(c, b){
-    var reportUrl=(crtasksMap[c.id]&&crtasksMap[c.id].lqaReport)||c.permalink||'';
     var codes=c.languages||[];
     if(!codes.length){ toast('No languages on <b>'+esc(c.ticket)+'</b>.'); return; }
-    var items=codes.map(function(code){ var lg=(linguists[String(code).toUpperCase()]||{}).lqa||'wes'; return { url:reportUrl, code:code, description:locTitleFor(c,code), stage:'lqa', execId:lg, tags:alphaTags(c,'lqa') }; });
+    if(b) b.disabled=true;
+    ensureCrowdinLinks(c).then(function(){
+    if(b) b.disabled=false;
+    var items=codes.map(function(code){ var lg=(linguists[String(code).toUpperCase()]||{}).lqa||'wes'; return { url:(crowdinLinkFor(c,code)||''), code:code, description:locTitleFor(c,code), stage:'lqa', execId:lg, tags:alphaTags(c,'lqa') }; });
     pickManager(function(mgr){
     if(b) b.disabled=true;
     toast('Creating '+items.length+' LQA alpha(s) in Alconost'+(mgr?' as '+esc(mgr):'')+'…', 12000);
@@ -943,6 +1020,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
         if(er.length){ msg+=' ('+esc(String(er[0].error).slice(0,140))+')'; }
         toast(msg); if(b) b.disabled=false;
       }).catch(function(err){ toast('LQA alphas failed: '+esc(String(err.message||err))); if(b) b.disabled=false; });
+    });
     });
   }
   document.getElementById('autopopClose').addEventListener('click', closeAutomate);
@@ -1155,7 +1233,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     var tab = sheetTabs[c.id];
     if(!tab){ toast('Send this card to a sheet first (→ Sheet).'); return; }
     var url=localStorage.getItem(SHEET_URL_KEY);
-    if(!url){ url=prompt('Paste your Apps Script web-app /exec URL:',''); if(!url) return; url=url.trim(); localStorage.setItem(SHEET_URL_KEY, url); }
+    if(!url){ url=prompt('Paste your Apps Script web-app /exec URL:',''); if(!url) return; url=url.trim(); setAppsUrl(url); }
     if(btn) btn.disabled=true;
     toast('Finding the Crowdin file…', 9000);
     resolveFileId(c).then(function(fileId){
@@ -1225,8 +1303,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     var u=prompt('Apps Script web-app /exec URL (public "Anyone" deployment):', cur);
     if(u===null) return;
     u=u.trim();
-    if(u){ localStorage.setItem(SHEET_URL_KEY, u); toast('Apps Script URL saved.'); }
-    else { localStorage.removeItem(SHEET_URL_KEY); toast('Apps Script URL cleared.'); }
+    if(u){ setAppsUrl(u); toast('Apps Script URL saved (shared).'); }
+    else { setAppsUrl(''); toast('Apps Script URL cleared.'); }
   });
   document.getElementById('sheetpopClose').addEventListener('click', closeSheetPicker);
   document.getElementById('sheetpop').addEventListener('click', function(e){ if(e.target===this) closeSheetPicker(); });
@@ -1316,6 +1394,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     crtasksMap = {}; var _ct=s.crtasks||{}; Object.keys(_ct).forEach(function(k){ try{ crtasksMap[k]=JSON.parse(_ct[k]); }catch(e){} });
     var _st=s.sheettab||{}; Object.keys(_st).forEach(function(k){ try{ sheetTabs[k]=JSON.parse(_st[k]); }catch(e){} });  // which cards have a sheet tab (shared, loaded on refresh)
     if(s.linguists && s.linguists.map){ try{ linguists = JSON.parse(s.linguists.map)||{}; }catch(e){} }  // shared preferred-linguist table
+    if(s.appsurl && s.appsurl.url){ try{ localStorage.setItem(SHEET_URL_KEY, s.appsurl.url); }catch(e){} }  // shared Apps Script URL
+    if(s.feedback){ feedback=s.feedback; refreshFbList(); }   // shared bugs & suggestions
     saveDone(); saveLqa(); saveTrans(); saveLqaDone(); saveTagSeen(); saveDel();   // keep the local cache mirrored
     reconcileDone(); reconcileLqa();
     render();

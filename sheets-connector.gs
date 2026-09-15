@@ -113,7 +113,8 @@ function doPost(e) {
             var srcVals = ash.getRange(2, srcCol, aLastRow - 1, 1).getValues();
             for (var ri = 0; ri < srcVals.length; ri++) {
               if (String(srcVals[ri][0]).trim() !== '') {
-                var rich = SpreadsheetApp.newRichTextValue().setText(link).setLinkUrl(link).build();
+                var label = 'Visual asset: ', full = label + link;
+                var rich = SpreadsheetApp.newRichTextValue().setText(full).setLinkUrl(label.length, full.length, link).build();
                 ash.getRange(ri + 2, ctxCol).setRichTextValue(rich); written++;
               }
             }

@@ -60,6 +60,38 @@ export async function scanIndex(token, tickets) {
   return { index }
 }
 
+// Count unresolved issues (linguist-raised string comments of type "issue") per file and per
+// target language. Crowdin comments carry a stringId + languageId but no fileId, so we first map
+// each file's string ids, then page the project's unresolved issues and bucket them.
+async function fileIssues(api, fileIds) {
+  const strToFile = {}
+  for (const fid of fileIds) {
+    for (let offset = 0; offset <= 20000; offset += 500) {
+      let b
+      try { b = await api(`/projects/${PROJECT}/strings?fileId=${fid}&limit=500&offset=${offset}`) } catch { break }
+      const d = (b.data || []).map((x) => x.data)
+      for (const s of d) strToFile[s.id] = fid
+      if (d.length < 500) break
+    }
+  }
+  const out = {}
+  for (const fid of fileIds) out[fid] = { total: 0, byLang: {} }
+  for (let offset = 0; offset <= 20000; offset += 500) {
+    let b
+    try { b = await api(`/projects/${PROJECT}/comments?type=issue&issueStatus=unresolved&limit=500&offset=${offset}`) } catch { break }
+    const d = (b.data || []).map((x) => x.data)
+    for (const cm of d) {
+      const fid = strToFile[cm.stringId]
+      if (fid == null) continue
+      out[fid].total++
+      const lang = cm.languageId || '_source'
+      out[fid].byLang[lang] = (out[fid].byLang[lang] || 0) + 1
+    }
+    if (d.length < 500) break
+  }
+  return out
+}
+
 export async function scanFile(token, ticket, codes) {
   const auth = { Authorization: 'Bearer ' + token }
   const api = async (p) => {
@@ -80,23 +112,25 @@ export async function scanFile(token, ticket, codes) {
 
   const pairs = (codes || []).map((c) => ({ code: String(c).toUpperCase(), langId: toCrowdinLang(c) })).filter((p) => p.langId)
   const proj = await projectInfo(api)
+  const issues = await fileIssues(api, matches.map((f) => f.id)).catch(() => ({}))
   const files = await Promise.all(matches.map(async (file) => {
     const pr = await api(`/projects/${PROJECT}/files/${file.id}/languages/progress?limit=500`)
     const rows = (pr.data || []).map((x) => x.data)
     const byId = {}; rows.forEach((r) => { byId[r.languageId] = r })
+    const fi = issues[file.id] || { total: 0, byLang: {} }
     // Show the card's languages (mapped to Crowdin ids). If none given, show any language that has strings.
     let langs
     if (pairs.length) {
-      langs = pairs.map((p) => { const r = byId[p.langId] || {}; return { code: p.code, langId: p.langId, translation: r.translationProgress || 0, approval: r.approvalProgress || 0, editorUrl: editorUrl(proj, file.id, p.langId) } })
+      langs = pairs.map((p) => { const r = byId[p.langId] || {}; return { code: p.code, langId: p.langId, translation: r.translationProgress || 0, approval: r.approvalProgress || 0, issues: fi.byLang[p.langId] || 0, editorUrl: editorUrl(proj, file.id, p.langId) } })
     } else {
-      langs = rows.filter((r) => ((r.phrases && r.phrases.total) || 0) > 0).map((r) => ({ code: r.languageId, langId: r.languageId, translation: r.translationProgress || 0, approval: r.approvalProgress || 0, editorUrl: editorUrl(proj, file.id, r.languageId) }))
+      langs = rows.filter((r) => ((r.phrases && r.phrases.total) || 0) > 0).map((r) => ({ code: r.languageId, langId: r.languageId, translation: r.translationProgress || 0, approval: r.approvalProgress || 0, issues: fi.byLang[r.languageId] || 0, editorUrl: editorUrl(proj, file.id, r.languageId) }))
     }
     const n = langs.length || 1
     const overall = {
       translation: Math.round(langs.reduce((a, l) => a + l.translation, 0) / n),
       approval: Math.round(langs.reduce((a, l) => a + l.approval, 0) / n)
     }
-    return { fileId: file.id, name: file.name, title: file.title || null, url: editorUrl(proj, file.id), overall, langs }
+    return { fileId: file.id, name: file.name, title: file.title || null, url: editorUrl(proj, file.id), overall, issues: fi.total, langs }
   }))
   return { found: true, files }
 }

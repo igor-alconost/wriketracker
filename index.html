@@ -758,7 +758,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   function setAppsUrl(url){ url=String(url||'').trim();
     if(url){ try{localStorage.setItem(SHEET_URL_KEY, url);}catch(e){} syncWrite({ kind:'appsurl', id:'url', val:url }); }
     else { try{localStorage.removeItem(SHEET_URL_KEY);}catch(e){} syncWrite({ kind:'appsurl', id:'url', remove:true }); } }
-  var DRIVE_PARENT='1CDbSwAf9_9Uu5EWFS_Sypuut-d92cFaQ';   // parent Drive folder for <ticket> attachment subfolders
+  var DRIVE_PARENT='1rbA3gnvn_Bw6hU0OJIxwUX_bYgFjb1vS';   // parent Drive folder for <ticket> attachment subfolders
   var LQA_FOLDER='1IC51iCJPoa8bkOEk130lGOZeWEXw3pFT';     // folder where LQA Report spreadsheets are created
   function loadSheets(){
     try { var s=JSON.parse(localStorage.getItem(SHEETS_KEY)); if(s&&s.length) return s; } catch(e){}

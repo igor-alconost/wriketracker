@@ -1,65 +1,70 @@
-# Alconost Brief Tracker
+# Scopely Tracker
 
-A single-file dashboard that tracks **active Wrike cards assigned to Alpha Alconost** whose comments either **tag Alpha** (the cards carrying the real brief) or **mention LQA** (translation done, ready for your LQA check).
+A simple dashboard that shows every localization task coming in from Wrike in one list, and helps you move each one through the whole flow — from a spreadsheet, into Crowdin, out to translators, and through LQA — with a few clicks.
 
-No framework, no build step, no dependencies.
+## Opening it
 
-## Open it
+Open the dashboard link in your browser and enter the shared password. That's it — no install.
 
-Two ways:
+The list loads automatically. Press **Refresh** (top right) any time to pull the latest briefs from Wrike.
 
-- **Double-click `start.bat`** (recommended) — launches the local server and opens <http://localhost:5178>. Here the in-page **Refresh** button pulls live data from Wrike and reloads. Keep the little black window open while you use it; close it to stop. (Equivalent to running `node server.mjs`.)
-- **Double-click `index.html`** — works offline from the last snapshot (`data.js`), but the Refresh button only reloads (no live pull).
+## Reading the list
 
-## Refresh the data from Wrike
+Each row is one brief. The columns tell you, at a glance:
 
-Either click **Refresh** while running via `node server.mjs`, or from a terminal:
+- **Description / Tickets** — what the brief is and its localization ticket(s). The **≡** icon opens the full list of localization cards for that brief, with a **Copy all** button.
+- **Languages** — the languages requested.
+- **LQA ready** — lights up when a teammate has finished translation and handed the brief over for your LQA check. Use the **LQA ready** filter at the top to show only those.
+- **Translation / LQA / Done** — the check-off columns you use to mark progress (see below).
+- **Automate** — the button that opens the workflow window for that brief.
 
-```bash
-node refresh.mjs
-```
+New briefs are marked **NEW**. Overdue briefs show in red, soon-due in amber.
 
-Requires Node 18+ (uses global `fetch`). It's fast — **~5–8 seconds** — because it makes only a handful of API calls:
+## Marking progress
 
-1. reads the access token from `../wrike.env`,
-2. pulls all cards in the Alconost folder in one paged fetch (the list already carries due date, permalink and updated-date), keeps the **Active** ones assigned to Alpha,
-3. pulls the account's recent comments and flags cards whose comments **tag Alpha** (`rel="KUAYQ3T3"`), or are an **LQA handoff** (tags Alpha + mentions `\bLQA\b` + authored by someone other than Alpha),
-4. resolves commenter names in one batch call and rewrites `data.js`.
+Two people share this board — one handles translation/proofreading, the other handles LQA — so the check-offs are how you hand a brief over:
 
-The token never touches the browser — only this Node script uses it. After it runs, just reload `index.html`.
+- The translator ticks **Translation** when translation (and proofreading, if any) is done.
+- The LQA person ticks **LQA** when the review is done.
+- Tick **Done** to close it out — the row greys and drops to the bottom.
 
-**On the comment window:** Wrike's account-wide comments endpoint covers the **last 7 days**. To make sure an older tag/LQA note isn't lost, the script merges with the previous `data.js` — so once a card is tracked it stays tracked while it's active. Keep refreshing at least weekly and nothing slips through. (The shipped `data.js` seeds this, so you start complete.)
+Everything you tick is shared, so both of you always see the same state.
 
-## Files
+## The Automate button — running a brief through the flow
 
-- `index.html` — the dashboard (HTML + CSS + vanilla JS, all inline)
-- `data.js` — the data snapshot (`window.__DATA__` + `window.__META__`)
-- `refresh.mjs` — pulls fresh data from Wrike into `data.js` (CLI or imported by the server)
-- `server.mjs` — serves the dashboard and powers the in-page Refresh button
+Click **Automate** on a row to open its workflow window. It has three groups of buttons, meant to be used left to right. A button is greyed with a small ✓ (already done) or 🔒 (do the step before it first) — hover it to see why.
 
-## Using it
+### Sheet
 
-- **Tabs** across the top filter by IP (MPY / PF / …), each with a count.
-- Click a **column header** (Card / Lang) to sort.
-- The **Done** checkbox marks a card handled — it's remembered in your browser (localStorage), survives reloads, and greys the row out.
-- The **LQA** column shows a pill when someone **else** tags you in a comment mentioning LQA (i.e. a "ready for LQA" handoff — not your own comments, and not LQA notes that don't tag you); hover it to read that comment. The **LQA ready** toggle filters to just those cards.
+- **Create tab** — makes a tab for this brief in the right Google Sheet and fills in the source text.
+- **Import translations** — later, pulls the finished translations back from Crowdin into that sheet.
 
-## Send a card to Google Sheets
+### Crowdin
 
-Each row has a **→ Sheet** button that creates a tab (named by the card ticket, e.g. `PF-65623`) in the right spreadsheet and fills **Project name**, **Languages codes**, the per-language column headers, and **Original content** (the strings parsed from the brief comment). Translation columns and Context are left for you/Crowdin.
+- **Upload source** — sends the brief's text into Crowdin so it can be translated.
+- **Create tasks + alphas** — creates the translation tasks in Crowdin and places the matching orders with the translators automatically.
 
-- MPY tickets → *MPY-Linguini and Farming translations batches*; PF tickets → *Pixel Flow translations*.
-- It only writes columns A–E + the header row, so translations you add later are never overwritten.
+### LQA (appears when a brief is ready for LQA)
 
-**One-time setup** (see `sheets-connector.gs`):
+- **Create report** — makes the LQA report spreadsheet, one tab per language, and shares it.
+- **Create LQA alphas** — places the LQA review orders with the reviewers.
 
-1. Open <https://script.google.com> → New project, paste `sheets-connector.gs`, Save.
-2. Deploy ▸ New deployment ▸ **Web app**, Execute as **Me**, Access **Anyone**. Authorize, copy the `/exec` URL.
-3. First time you click **→ Sheet**, paste that URL when prompted (stored in your browser after).
+### Attaching the reference image
 
-Notes: the send is fire-and-forget (browser can't read the response), so use the **open sheet** link in the toast to verify. Original content only auto-fills for briefs whose strings are listed inline in the comment; VO/externally-linked tasks arrive with an empty Original content column to fill manually.
+When you send a brief to the sheet, you can pick a file attached to the Wrike card. It's uploaded to Google Drive and its link is dropped into the sheet (shown as **Visual asset:**), so translators always have the reference in front of them. Do this **before** uploading to Crowdin so the link travels with the text.
 
-## Notes
+## Progress and issues
 
-- "Master card" column: a card with that ticket number exists in the folder (✓) or is **missing** (✕) — when missing, this row is the de-facto brief.
-- Due-date colouring: red = overdue, amber = due within 7 days, green = later.
+Open a row's **▸** panel to see how far along each language is in Crowdin. If a translator has raised a question or flagged a problem on a string, you'll see a red **⚠ issue** marker here so you can jump in.
+
+## Translators
+
+The **Translators** button (top right) opens a table where you set the preferred person for each language and stage (translation, proofreading, LQA). Those are the people the dashboard orders work from. Edit it and **Save** — it's shared with everyone.
+
+## Found a bug or have an idea?
+
+Use the **💬 Feedback** button in the bottom-right corner to jot it down. It's saved and visible to the whole team.
+
+---
+
+*First time on a new computer:* you'll be asked once for the shared password, and (the first time you send something to a sheet) for the Google Apps Script link — both are shared, so you only ever do this once.

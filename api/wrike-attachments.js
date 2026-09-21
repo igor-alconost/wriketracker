@@ -18,32 +18,75 @@ export async function listAttachments(token, taskId) {
   return { attachments: list }
 }
 
+// The file bytes are base64-relayed through this function and the Apps Script, which caps the
+// workable size well below Wrike's own limit. Anything larger is handled by creating the folder
+// and telling the user to drop the file in by hand.
+const OVERSIZE_LIMIT = 35 * 1024 * 1024   // ~35 MB raw (base64 ≈ 47 MB, under Apps Script's ~50 MB)
+
+// Open a streaming download of an attachment from Wrike (bytes are piped straight through to the
+// caller, never buffered whole) — used by the download-to-PC proxy, which works at any size.
+export async function openAttachmentStream(token, attachmentId) {
+  const id = String(attachmentId || '')
+  if (!id) throw new Error('attachmentId required')
+  const mr = await fetch(`${WAPI}/attachments/${id}`, { headers: { Authorization: 'Bearer ' + token } })
+  const mj = await mr.json().catch(() => null)
+  const meta = (mj && mj.data && mj.data[0]) || {}
+  const dr = await fetch(`${WAPI}/attachments/${id}/download`, { headers: { Authorization: 'Bearer ' + token }, redirect: 'follow' })
+  if (dr.status >= 400 || !dr.body) throw new Error('Wrike download → ' + dr.status)
+  return { body: dr.body, fileName: meta.name || id, contentType: meta.contentType || 'application/octet-stream', size: Number(meta.size || 0) }
+}
+
 export async function attachmentToDrive(token, opts) {
   const attachmentId = String(opts.attachmentId || '')
   const appsScriptUrl = String(opts.appsScriptUrl || opts.url || '')
   if (!attachmentId) throw new Error('attachmentId required')
   if (!/^https:\/\/script\.google\.com\//.test(appsScriptUrl)) throw new Error('invalid Apps Script URL')
 
-  // metadata (name + contentType)
+  // create (or find) the <ticket> subfolder and return its link — the fallback for big/failed files
+  const ensureFolder = async () => {
+    try {
+      const fr = await fetch(appsScriptUrl, {
+        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow',
+        body: JSON.stringify({ mode: 'ensureFolder', parentFolderId: String(opts.parentFolderId || ''), ticket: String(opts.ticket || '') })
+      })
+      const fj = await fr.json().catch(() => null)
+      return (fj && fj.ok) ? { folderUrl: fj.url, folderId: fj.folderId } : {}
+    } catch { return {} }
+  }
+
+  // metadata (name + contentType + size)
   const mr = await fetch(`${WAPI}/attachments/${attachmentId}`, { headers: { Authorization: 'Bearer ' + token } })
   const mj = await mr.json().catch(() => null)
   const meta = (mj && mj.data && mj.data[0]) || {}
   const fileName = meta.name || (String(opts.ticket || 'file'))
   const contentType = meta.contentType || 'application/octet-stream'
+  const size = Number(meta.size || opts.size || 0)
 
-  // download the bytes
-  const dr = await fetch(`${WAPI}/attachments/${attachmentId}/download`, { headers: { Authorization: 'Bearer ' + token }, redirect: 'follow' })
-  if (dr.status >= 400) throw new Error('Wrike download → ' + dr.status)
-  const buf = Buffer.from(await dr.arrayBuffer())
+  // too big to relay — make the folder and tell the user to add it manually
+  if (size > OVERSIZE_LIMIT) {
+    const f = await ensureFolder()
+    return { ok: true, oversize: true, reason: 'too-big', fileName, size, ...f }
+  }
 
-  // hand to the Apps Script (Drive upload + Context write); its response is readable server-side
-  const ar = await fetch(appsScriptUrl, {
-    method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow',
-    body: JSON.stringify({ mode: 'attachToSheet', spreadsheetId: String(opts.spreadsheetId || ''), tab: String(opts.tab || ''), ticket: String(opts.ticket || ''), parentFolderId: String(opts.parentFolderId || ''), fileName, contentType, dataBase64: buf.toString('base64') })
-  })
-  const aj = await ar.json().catch(() => null)
-  if (!aj || !aj.ok) throw new Error((aj && aj.error) || 'Apps Script upload failed — redeploy it with Drive permission?')
-  return { ok: true, url: aj.url, folderId: aj.folderId, fileId: aj.fileId, rows: aj.rows, fileName, size: buf.length }
+  try {
+    // download the bytes
+    const dr = await fetch(`${WAPI}/attachments/${attachmentId}/download`, { headers: { Authorization: 'Bearer ' + token }, redirect: 'follow' })
+    if (dr.status >= 400) throw new Error('Wrike download → ' + dr.status)
+    const buf = Buffer.from(await dr.arrayBuffer())
+
+    // hand to the Apps Script (Drive upload + Context write); its response is readable server-side
+    const ar = await fetch(appsScriptUrl, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow',
+      body: JSON.stringify({ mode: 'attachToSheet', spreadsheetId: String(opts.spreadsheetId || ''), tab: String(opts.tab || ''), ticket: String(opts.ticket || ''), parentFolderId: String(opts.parentFolderId || ''), fileName, contentType, dataBase64: buf.toString('base64') })
+    })
+    const aj = await ar.json().catch(() => null)
+    if (!aj || !aj.ok) throw new Error((aj && aj.error) || 'Apps Script upload failed — redeploy it with Drive permission?')
+    return { ok: true, url: aj.url, folderId: aj.folderId, fileId: aj.fileId, rows: aj.rows, fileName, size: buf.length }
+  } catch (e) {
+    // upload failed anyway — still leave the folder ready and report it, don't hard-fail
+    const f = await ensureFolder()
+    return { ok: true, oversize: true, reason: 'error', error: String((e && e.message) || e), fileName, size, ...f }
+  }
 }
 
 export default async function handler(req, res) {

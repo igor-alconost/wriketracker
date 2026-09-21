@@ -86,6 +86,16 @@ function doPost(e) {
       return _json({ ok: true, strings: col, context: ctxArr });
     }
 
+    // Just create (or find) the <ticket> subfolder and return its link — used when an attachment is
+    // too big to relay through here, so the dashboard can point the user at the right folder.
+    if (p.mode === 'ensureFolder') {
+      var eParent = DriveApp.getFolderById(String(p.parentFolderId));
+      var eName = String(p.ticket || 'misc');
+      var eit = eParent.getFoldersByName(eName);
+      var eSub = eit.hasNext() ? eit.next() : eParent.createFolder(eName);
+      return _json({ ok: true, mode: 'ensureFolder', folderId: eSub.getId(), url: eSub.getUrl() });
+    }
+
     // Upload a Wrike attachment to Drive (subfolder = ticket) and put its shareable link in the
     // "Context" column of every content row. Needs Drive permission (re-authorize on redeploy).
     if (p.mode === 'attachToSheet') {
@@ -194,7 +204,7 @@ function doPost(e) {
 // `capabilities` lets the dashboard detect (read-only) that this version supports the newer modes,
 // so it never sends an unrecognized mode to an old deployment.
 function doGet() {
-  return _json({ ok: true, service: 'brief-tracker sheets connector', capabilities: ['listTabs', 'importTranslations', 'readSource', 'attachToSheet', 'lqaReport'], sheets: Object.keys(SHEETS) });
+  return _json({ ok: true, service: 'brief-tracker sheets connector', capabilities: ['listTabs', 'importTranslations', 'readSource', 'attachToSheet', 'ensureFolder', 'lqaReport'], sheets: Object.keys(SHEETS) });
 }
 
 function _json(o) {

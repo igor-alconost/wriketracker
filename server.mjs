@@ -16,7 +16,8 @@ import { taskProgress } from './api/crowdin-progress.js'
 import { fetchTranslations } from './api/crowdin-translations.js'
 import { listTabs, readSource } from './api/sheet-tabs.js'
 import { scanFile, scanIndex } from './api/crowdin-scan.js'
-import { listAttachments, attachmentToDrive } from './api/wrike-attachments.js'
+import { listAttachments, attachmentToDrive, openAttachmentStream } from './api/wrike-attachments.js'
+import { Readable } from 'node:stream'
 import { createLqaReport } from './api/lqa-report.js'
 import { createAlphas, readAlconostKey, listManagers } from './api/alconost-alpha.js'
 
@@ -148,6 +149,21 @@ http
       res.writeHead(405); res.end(); return
     }
 
+    // Download an attachment straight to the browser (streamed, any size).
+    if (url.pathname === '/api/wrike-download') {
+      const auth = checkAuth(url.searchParams.get('key'))
+      if (!auth.ok) { res.writeHead(auth.code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: auth.error })); return }
+      const att = url.searchParams.get('att')
+      if (!att) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'att required' })); return }
+      try {
+        const { body, fileName, contentType } = await openAttachmentStream(readToken(), att)
+        const safe = String(fileName).replace(/["\\\r\n]/g, '_')
+        res.writeHead(200, { 'Content-Type': contentType, 'Content-Disposition': `attachment; filename="${safe}"`, 'Cache-Control': 'no-store' })
+        Readable.fromWeb(body).pipe(res)
+      } catch (e) { res.writeHead(500, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: String(e.message || e) })) }
+      return
+    }
+
     // Wrike attachments: list a card's attachments, or push one to Drive + write the Context column.
     if (url.pathname === '/api/wrike-attachments') {
       const auth = checkAuth(req.headers['x-access-key'])
@@ -158,7 +174,8 @@ http
         try {
           const body = JSON.parse(raw || '{}')
           const token = readToken()
-          const out = (body.op === 'toDrive') ? await attachmentToDrive(token, body) : await listAttachments(token, String(body.taskId || ''))
+          const out = (body.op === 'toDrive') ? await attachmentToDrive(token, body)
+            : await listAttachments(token, String(body.taskId || ''))
           res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(out))
         } catch (e) { res.writeHead(500, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: String(e.message || e) })) }
       })

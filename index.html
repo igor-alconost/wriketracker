@@ -222,8 +222,11 @@ td.langs{max-width:260px;font-family:var(--mono);font-size:11.5px;color:var(--mu
 .mgr-name{font-size:15px;font-weight:700;color:var(--ink);text-transform:capitalize;}
 .mgr-last{position:absolute;top:8px;right:8px;font-size:8.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--link);background:var(--brief-bg);padding:2px 6px;border-radius:5px;}
 .att-list{display:flex;flex-direction:column;gap:8px;padding:6px 0;}
-.att-item{display:flex;flex-direction:column;gap:2px;text-align:left;background:var(--surface);border:1px solid var(--hair);border-radius:8px;padding:9px 12px;cursor:pointer;font:inherit;}
+.att-row{display:flex;gap:8px;align-items:stretch;}
+.att-item{flex:1;display:flex;flex-direction:column;gap:2px;text-align:left;background:var(--surface);border:1px solid var(--hair);border-radius:8px;padding:9px 12px;cursor:pointer;font:inherit;}
 .att-item:hover{border-color:var(--link);background:var(--brief-bg);}
+.att-dl{flex:none;align-self:stretch;background:var(--surface);border:1px solid var(--hair);border-radius:8px;color:var(--muted);font:inherit;font-size:12px;font-weight:600;cursor:pointer;padding:0 12px;white-space:nowrap;}
+.att-dl:hover{border-color:var(--link);color:var(--link);}
 .att-name{font-weight:600;color:var(--ink);font-size:13px;word-break:break-all;}
 .att-meta{font-size:11px;color:var(--muted);}
 .att-latest{background:var(--lqa);color:#fff;font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:1px 5px;border-radius:4px;margin-left:6px;}
@@ -674,7 +677,10 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   document.getElementById('locpop').addEventListener('click', function(e){ if(e.target===this) closeLocModal(); });
   document.getElementById('attpopClose').addEventListener('click', closeAtt);
   document.getElementById('attpop').addEventListener('click', function(e){ if(e.target===this) closeAtt(); });
-  document.getElementById('attpopBody').addEventListener('click', function(e){ var it=e.target.closest('.att-item[data-att]'); if(it) selectAttachment(it.getAttribute('data-att')); });
+  document.getElementById('attpopBody').addEventListener('click', function(e){
+    var dl=e.target.closest('.att-dl[data-dl]'); if(dl){ downloadAttachment(dl.getAttribute('data-dl'), dl.getAttribute('data-name')); return; }
+    var it=e.target.closest('.att-item[data-att]'); if(it) selectAttachment(it.getAttribute('data-att'));
+  });
   document.getElementById('lingBtn').addEventListener('click', openLinguists);
   document.getElementById('lingClose').addEventListener('click', closeLinguists);
   document.getElementById('lingSave').addEventListener('click', saveLinguists);
@@ -830,21 +836,39 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
         attCtx={ c:c, sheet:sheet };
         document.getElementById('attpopTitle').textContent=c.ticket+' — attach source to Drive';
         document.getElementById('attpopBody').innerHTML='<div class="att-list">'+atts.map(function(a,i){
-          return '<button class="att-item" data-att="'+esc(a.id)+'"><span class="att-name">'+esc(a.name)+'</span>'
-            +'<span class="att-meta">'+esc(fmtBytes(a.size))+' · '+esc(String(a.createdDate||'').slice(0,10))+(i===0?' <span class="att-latest">latest</span>':'')+'</span></button>';
+          return '<div class="att-row">'
+            +'<button class="att-item" data-att="'+esc(a.id)+'"><span class="att-name">'+esc(a.name)+'</span>'
+            +'<span class="att-meta">'+esc(fmtBytes(a.size))+' · '+esc(String(a.createdDate||'').slice(0,10))+(i===0?' <span class="att-latest">latest</span>':'')+'</span></button>'
+            +'<button class="att-dl" data-dl="'+esc(a.id)+'" data-name="'+esc(a.name)+'" title="Download to your computer">⬇ PC</button>'
+            +'</div>';
         }).join('')+'</div>';
         document.getElementById('attpop').style.display='flex';
       })
       .catch(function(err){ toast('Couldn’t list attachments: '+esc(String(err.message||err))); });
   }
   function closeAtt(){ document.getElementById('attpop').style.display='none'; }
+  // Download an attachment straight to the user's PC (works at any size — the file is streamed
+  // through our server as an attachment, so the browser saves it directly).
+  function downloadAttachment(attId, name){
+    var u='/api/wrike-download?att='+encodeURIComponent(attId)+'&key='+encodeURIComponent(KEY||'');
+    var a=document.createElement('a'); a.href=u; a.download=name||''; document.body.appendChild(a); a.click(); a.remove();
+    toast('Downloading <b>'+esc(name||'file')+'</b> to your computer…');
+  }
   function selectAttachment(attId){
     var c=attCtx&&attCtx.c, sheet=attCtx&&attCtx.sheet; if(!c||!sheet) return;
     closeAtt();
     var appsUrl=localStorage.getItem(SHEET_URL_KEY)||'';
     toast('Uploading attachment to Drive & writing Context for <b>'+esc(c.ticket)+'</b>…', 15000);
     fetch('/api/wrike-attachments', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ op:'toDrive', taskId:c.id, attachmentId:attId, ticket:c.ticket, url:appsUrl, spreadsheetId:sheet.id, tab:c.ticket, parentFolderId:DRIVE_PARENT }) })
-      .then(cjson).then(function(r){ toast('Uploaded to Drive/'+esc(c.ticket)+' & wrote Context in '+r.rows+' row(s). <a href="'+esc(r.url)+'" target="_blank" rel="noreferrer">open file</a>'); })
+      .then(cjson).then(function(r){
+        if(r.oversize){
+          var why = (r.reason==='too-big') ? 'is too big to auto-upload' : 'couldn’t be uploaded';
+          var link = r.folderUrl ? ' <a href="'+esc(r.folderUrl)+'" target="_blank" rel="noreferrer">open folder</a>' : '';
+          toast('⚠ <b>'+esc(r.fileName||'file')+'</b> '+why+' ('+fmtBytes(r.size)+'). Folder <b>'+esc(c.ticket)+'</b> is ready — add it manually'+(link?', or reopen and use ⬇ PC to download it.':'.')+link, 20000);
+          return;
+        }
+        toast('Uploaded to Drive/'+esc(c.ticket)+' & wrote Context in '+r.rows+' row(s). <a href="'+esc(r.url)+'" target="_blank" rel="noreferrer">open file</a>');
+      })
       .catch(function(err){ toast('Drive upload failed: '+esc(String(err.message||err))); });
   }
   // ---- Crowdin micro-steps (each its own button in the Automate modal) ----

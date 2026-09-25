@@ -56,6 +56,16 @@ function doPost(e) {
       return _json({ ok: true, mode: 'lqaReport', url: newSs.getUrl(), id: newSs.getId(), accessible: accessible, moved: moved, shared: shared, note: note });
     }
 
+    // Just create (or find) the <ticket> subfolder and return its link — used when an attachment is
+    // too big to relay through here. Needs no spreadsheet, so it sits before the ssId guard below.
+    if (p.mode === 'ensureFolder') {
+      var eParent = DriveApp.getFolderById(String(p.parentFolderId));
+      var eName = String(p.ticket || 'misc');
+      var eit = eParent.getFoldersByName(eName);
+      var eSub = eit.hasNext() ? eit.next() : eParent.createFolder(eName);
+      return _json({ ok: true, mode: 'ensureFolder', folderId: eSub.getId(), url: eSub.getUrl() });
+    }
+
     // Prefer an explicit spreadsheet id chosen in the dashboard; fall back to the ticket-prefix map.
     var ssId = p.spreadsheetId || SHEETS[p.ip];
     if (!ssId) return _json({ ok: false, error: 'No spreadsheet chosen (and none mapped for "' + p.ip + '")' });
@@ -84,16 +94,6 @@ function doPost(e) {
       var ctxArr = [];
       if (rCtxCol && col.length) ctxArr = rsheet.getRange(2, rCtxCol, col.length, 1).getValues().map(function (r) { return String(r[0] == null ? '' : r[0]); });
       return _json({ ok: true, strings: col, context: ctxArr });
-    }
-
-    // Just create (or find) the <ticket> subfolder and return its link — used when an attachment is
-    // too big to relay through here, so the dashboard can point the user at the right folder.
-    if (p.mode === 'ensureFolder') {
-      var eParent = DriveApp.getFolderById(String(p.parentFolderId));
-      var eName = String(p.ticket || 'misc');
-      var eit = eParent.getFoldersByName(eName);
-      var eSub = eit.hasNext() ? eit.next() : eParent.createFolder(eName);
-      return _json({ ok: true, mode: 'ensureFolder', folderId: eSub.getId(), url: eSub.getUrl() });
     }
 
     // Upload a Wrike attachment to Drive (subfolder = ticket) and put its shareable link in the

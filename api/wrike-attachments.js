@@ -47,7 +47,8 @@ export async function attachmentToDrive(token, opts) {
     try {
       const fr = await fetch(appsScriptUrl, {
         method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow',
-        body: JSON.stringify({ mode: 'ensureFolder', parentFolderId: String(opts.parentFolderId || ''), ticket: String(opts.ticket || '') })
+        // spreadsheetId is sent only to satisfy the connector's "spreadsheet chosen" guard; ensureFolder ignores it
+        body: JSON.stringify({ mode: 'ensureFolder', parentFolderId: String(opts.parentFolderId || ''), ticket: String(opts.ticket || ''), spreadsheetId: String(opts.spreadsheetId || '') })
       })
       const fj = await fr.json().catch(() => null)
       return (fj && fj.ok) ? { folderUrl: fj.url, folderId: fj.folderId } : {}

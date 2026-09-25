@@ -850,7 +850,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   // Download an attachment straight to the user's PC (works at any size — the file is streamed
   // through our server as an attachment, so the browser saves it directly).
   function downloadAttachment(attId, name){
-    var u='/api/wrike-download?att='+encodeURIComponent(attId)+'&key='+encodeURIComponent(KEY||'');
+    var u='/api/wrike-attachments?att='+encodeURIComponent(attId)+'&key='+encodeURIComponent(KEY||'');
     var a=document.createElement('a'); a.href=u; a.download=name||''; document.body.appendChild(a); a.click(); a.remove();
     toast('Downloading <b>'+esc(name||'file')+'</b> to your computer…');
   }

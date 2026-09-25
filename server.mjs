@@ -149,23 +149,22 @@ http
       res.writeHead(405); res.end(); return
     }
 
-    // Download an attachment straight to the browser (streamed, any size).
-    if (url.pathname === '/api/wrike-download') {
-      const auth = checkAuth(url.searchParams.get('key'))
-      if (!auth.ok) { res.writeHead(auth.code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: auth.error })); return }
-      const att = url.searchParams.get('att')
-      if (!att) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'att required' })); return }
-      try {
-        const { body, fileName, contentType } = await openAttachmentStream(readToken(), att)
-        const safe = String(fileName).replace(/["\\\r\n]/g, '_')
-        res.writeHead(200, { 'Content-Type': contentType, 'Content-Disposition': `attachment; filename="${safe}"`, 'Cache-Control': 'no-store' })
-        Readable.fromWeb(body).pipe(res)
-      } catch (e) { res.writeHead(500, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: String(e.message || e) })) }
-      return
-    }
-
-    // Wrike attachments: list a card's attachments, or push one to Drive + write the Context column.
+    // Wrike attachments: GET streams one to the browser as a download; POST lists a card's
+    // attachments or pushes one to Drive + writes the Context column.
     if (url.pathname === '/api/wrike-attachments') {
+      if (req.method === 'GET') {
+        const auth = checkAuth(url.searchParams.get('key'))
+        if (!auth.ok) { res.writeHead(auth.code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: auth.error })); return }
+        const att = url.searchParams.get('att')
+        if (!att) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'att required' })); return }
+        try {
+          const { body, fileName, contentType } = await openAttachmentStream(readToken(), att)
+          const safe = String(fileName).replace(/["\\\r\n]/g, '_')
+          res.writeHead(200, { 'Content-Type': contentType, 'Content-Disposition': `attachment; filename="${safe}"`, 'Cache-Control': 'no-store' })
+          Readable.fromWeb(body).pipe(res)
+        } catch (e) { res.writeHead(500, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: String(e.message || e) })) }
+        return
+      }
       const auth = checkAuth(req.headers['x-access-key'])
       if (!auth.ok) { res.writeHead(auth.code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: auth.error })); return }
       if (req.method !== 'POST') { res.writeHead(405); res.end(); return }

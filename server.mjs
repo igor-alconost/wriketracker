@@ -9,7 +9,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { refreshData, readToken } from './refresh.mjs'
-import { buildCards, checkAuth } from './api/wrike-cards.js'
+import { buildCards, checkAuth, setVendorEstimate } from './api/wrike-cards.js'
 import { upsertCrowdinFile, readCrowdinToken } from './api/crowdin-file.js'
 import { createTasks } from './api/crowdin-tasks.js'
 import { taskProgress } from './api/crowdin-progress.js'
@@ -34,6 +34,20 @@ http
     if (url.pathname === '/api/wrike-cards') {
       const auth = checkAuth(req.headers['x-access-key'])
       if (!auth.ok) { res.writeHead(auth.code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: auth.error })); return }
+      if (req.method === 'POST') {
+        let raw = ''; req.on('data', (d) => { raw += d })
+        req.on('end', async () => {
+          try {
+            const body = JSON.parse(raw || '{}')
+            if (body.op !== 'setVE') { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'unknown op' })); return }
+            const ids = Array.isArray(body.ids) ? body.ids.map(String).filter(Boolean) : []
+            if (!ids.length || body.value === undefined || body.value === null || body.value === '') { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'ids and value required' })); return }
+            const out = await setVendorEstimate(readToken(), ids, body.value)
+            res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(out))
+          } catch (e) { res.writeHead(500, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: String(e.message || e) })) }
+        })
+        return
+      }
       try {
         const data = await buildCards(readToken(), Number(process.env.LOOKBACK_DAYS || '30'))
         res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' })

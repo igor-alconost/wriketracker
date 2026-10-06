@@ -249,9 +249,14 @@ td.langs{max-width:260px;font-family:var(--mono);font-size:11.5px;color:var(--mu
 tr.detail td{background:var(--hair2);padding:10px 16px 13px;}
 .detail-head{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px;}
 .detail-n{color:var(--faint);}
-.loc-actions{display:flex;justify-content:flex-end;margin:2px 0 10px;}
+.loc-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:2px 0 10px;flex-wrap:wrap;}
 .loc-copyall{background:var(--brief-bg);border:1px solid var(--link);color:var(--link);border-radius:7px;padding:6px 12px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;}
 .loc-copyall:hover{background:var(--surface);}
+.loc-ve-wrap{display:flex;align-items:center;gap:6px;}
+.loc-ve-input{width:64px;padding:6px 8px;border:1px solid var(--hair);border-radius:7px;font:inherit;font-size:12px;}
+.loc-ve-set{background:var(--ok-bg,#e4f4ea);border:1px solid var(--ok,#2e7d46);color:var(--ok,#2e7d46);border-radius:7px;padding:6px 12px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.loc-ve-set:hover{background:var(--surface);}
+.loc-ve-set:disabled{opacity:.6;cursor:default;}
 .modal-card--loc{max-width:440px;}
 .loc-list{display:flex;flex-direction:column;gap:7px;}
 .loc-list .loc-item{justify-content:flex-start;gap:9px;padding:7px 11px;font-size:13.5px;}
@@ -628,17 +633,43 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
         + (i.ticket?'<span class="loc-tk">'+esc(i.ticket)+'</span>':'<span class="loc-open">open ↗</span>')+vestBadge(i)+'</a>';
     }).join('');
     locUrls = r.items.map(function(i){ return i.url; }).filter(Boolean);
+    locItems = r.items; locCardId = c.id;
+    var veCount = r.items.filter(function(i){ return i.id; }).length;
     document.getElementById('locpopTitle').textContent = mainTk+' Tickets ('+r.items.length+')';
     document.getElementById('locpopBody').innerHTML =
-      (locUrls.length?'<div class="loc-actions"><button class="loc-copyall">⧉ Copy all ('+locUrls.length+')</button></div>':'')
+      '<div class="loc-actions">'
+        + (locUrls.length?'<button class="loc-copyall">⧉ Copy all ('+locUrls.length+')</button>':'')
+        + (veCount?'<span class="loc-ve-wrap"><input class="loc-ve-input" type="number" min="0" step="1" placeholder="VE"/><button class="loc-ve-set">Set VE for all ('+veCount+')</button></span>':'')
+      + '</div>'
       + '<div class="loc-list">'+chips+'</div>';
     document.getElementById('locpop').style.display='flex';
   }
-  var locUrls=[];
+  var locUrls=[], locItems=[], locCardId=null;
   document.getElementById('locpopBody').addEventListener('click', function(e){
-    var b=e.target.closest('.loc-copyall'); if(!b) return;
-    var txt=locUrls.join('\n');
-    if(navigator.clipboard) navigator.clipboard.writeText(txt).then(function(){ var o=b.textContent; b.textContent='✓ Copied '+locUrls.length; setTimeout(function(){ b.textContent=o; },1500); }, function(){ toast('Copy failed'); });
+    var cp=e.target.closest('.loc-copyall');
+    if(cp){
+      var txt=locUrls.join('\n');
+      if(navigator.clipboard) navigator.clipboard.writeText(txt).then(function(){ var o=cp.textContent; cp.textContent='✓ Copied '+locUrls.length; setTimeout(function(){ cp.textContent=o; },1500); }, function(){ toast('Copy failed'); });
+      return;
+    }
+    var vb=e.target.closest('.loc-ve-set');
+    if(vb){
+      var inp=document.querySelector('#locpopBody .loc-ve-input');
+      var val=(inp&&inp.value||'').trim();
+      if(val===''){ toast('Enter a Vendor Estimate value first.'); if(inp) inp.focus(); return; }
+      var ids=(locItems||[]).map(function(i){ return i.id; }).filter(Boolean);
+      if(!ids.length){ toast('No tickets with a Wrike id to update.'); return; }
+      vb.disabled=true; var o=vb.textContent; vb.textContent='Setting…';
+      fetch('/api/wrike-cards', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ op:'setVE', ids:ids, value:val }) })
+        .then(cjson).then(function(r){
+          var ok=(r.results||[]).filter(function(x){return x.ok;}).length, er=(r.results||[]).filter(function(x){return x.error;});
+          (locItems||[]).forEach(function(i){ if(i.id) i.vest=val; });   // reflect in memory + badges
+          render();                                                       // update row data if shown
+          if(locCardId) openLocModal(locCardId);                          // re-render modal with new VE badges
+          toast('Set VE '+esc(val)+' on '+ok+' ticket(s)'+(er.length?', '+er.length+' failed ('+esc(String(er[0].error).slice(0,80))+')':'')+'.');
+        }).catch(function(err){ toast('Set VE failed: '+esc(String(err.message||err))); vb.disabled=false; vb.textContent=o; });
+      return;
+    }
   });
   function closeLocModal(){ document.getElementById('locpop').style.display='none'; }
   function updateTitle(shown){
@@ -1060,7 +1091,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     if(b) b.disabled=true;
     ensureCrowdinLinks(c).then(function(){
     if(b) b.disabled=false;
-    var items=codes.map(function(code){ var lg=(linguists[String(code).toUpperCase()]||{}).lqa||'wes'; return { url:(crowdinLinkFor(c,code)||''), code:code, description:locTitleFor(c,code), stage:'lqa', execId:lg, tags:alphaTags(c,'lqa') }; });
+    var items=codes.map(function(code){ var lg=(linguists[String(code).toUpperCase()]||{}).lqa||'wes'; return { url:(crowdinLinkFor(c,code)||''), code:code, description:locTitleFor(c,code), stage:'lqa', execId:lg, tags:alphaTags(c,'lqa'), gross:'30' }; });
     pickManager(function(mgr){
     if(b) b.disabled=true;
     toast('Creating '+items.length+' LQA alpha(s) in Alconost'+(mgr?' as '+esc(mgr):'')+'…', 12000);
@@ -1156,7 +1187,10 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     var d=crtasksMap[c.id];
     var pend=(tasks||[]).filter(function(t){ return t.taskId && !t.skipped && !t.alphaId; });
     if(!pend.length) return;
-    var items=pend.map(function(t){ var row=linguists[String(t.code).toUpperCase()]||{}; return { url:t.url, code:t.code, description:locTitleFor(c,t.code), stage:stage, execId:row[stage]||'', tags:alphaTags(c,stage) }; });
+    // gross (EUR): translation alone = 30; when there's proofreading it's split 15 + 15
+    var proof=!!(d&&d.proofDesired);
+    var gross=(stage==='proofreading')?'15':(proof?'15':'30');
+    var items=pend.map(function(t){ var row=linguists[String(t.code).toUpperCase()]||{}; return { url:t.url, code:t.code, description:locTitleFor(c,t.code), stage:stage, execId:row[stage]||'', tags:alphaTags(c,stage), gross:gross }; });
     pickManager(function(mgr){
     toast('Creating '+items.length+' '+esc(stage)+' alpha(s) in Alconost'+(mgr?' as '+esc(mgr):'')+'…', 9000);
     fetch('/api/alconost-alpha', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ items:items, manager:mgr }) })

@@ -174,7 +174,7 @@ export async function buildCards(token, lookbackDays) {
       if (!(s.responsibleIds || []).includes(ALPHA)) continue   // only copy-loc tickets assigned to Alpha Alconost
       const lang = NORM[titleCode(s.title)] || titleCode(s.title) || ''
       if (!lang) continue
-      seenTk.add(tkk); locCards.push({ lang, ticket: tkk, url: s.permalink || '', title: s.title, vest: cf(s, 'Vendor Estimate') })
+      seenTk.add(tkk); locCards.push({ id: s.id, lang, ticket: tkk, url: s.permalink || '', title: s.title, vest: cf(s, 'Vendor Estimate') })
     }
     // languages: from the copy-localization cards; else auto-table; else sibling titles + comment codes
     const raw = []
@@ -185,9 +185,9 @@ export async function buildCards(token, lookbackDays) {
       for (const text of commentTexts) for (const code of langCodes(stripHtml(text))) raw.push(code)
     }
     // related dropdown: ONLY the copy-localization cards (no auto-table fallback)
-    const relItems = locCards.map((lc) => ({ lang: lc.lang, ticket: lc.ticket, url: lc.url, title: lc.title, vest: lc.vest }))
+    const relItems = locCards.map((lc) => ({ id: lc.id, lang: lc.lang, ticket: lc.ticket, url: lc.url, title: lc.title, vest: lc.vest }))
     // Only add the "this card" chip when the card's own ticket is itself a copy-localization ticket.
-    if (mref && relItems.length && !relItems.some((i) => i.ticket === self) && /copy\s*localization/i.test(title)) { const selfLang = NORM[titleCode(title)] || titleCode(title) || ''; relItems.unshift({ lang: selfLang, ticket: self, url: task.permalink, title, self: true, vest: cf(task, 'Vendor Estimate') }) }
+    if (mref && relItems.length && !relItems.some((i) => i.ticket === self) && /copy\s*localization/i.test(title)) { const selfLang = NORM[titleCode(title)] || titleCode(title) || ''; relItems.unshift({ id: task.id, lang: selfLang, ticket: self, url: task.permalink, title, self: true, vest: cf(task, 'Vendor Estimate') }) }
     const related = { type: 'children', parent: self, items: relItems }   // the card's own copy-loc tickets
     const strings = extractStrings(briefTexts)
     const srcArr = raw.length ? raw : langCodes(cf(task, 'Language'))
@@ -216,11 +216,40 @@ export function checkAuth(providedKey) {
   return { ok: false, code: 401, error: 'Wrong or missing password' }
 }
 
+// Write the "Vendor Estimate" (Currency) custom field on a set of Wrike tasks (same value on each).
+export async function setVendorEstimate(token, ids, value) {
+  const auth = { Authorization: 'Bearer ' + token }
+  const cfj = await (await fetch(`${API}/customfields`, { headers: auth })).json().catch(() => null)
+  const field = ((cfj && cfj.data) || []).find((c) => c.title === 'Vendor Estimate')
+  if (!field) throw new Error('"Vendor Estimate" custom field not found in Wrike')
+  const cfParam = encodeURIComponent(JSON.stringify([{ id: field.id, value: String(value) }]))
+  const results = []
+  for (const id of ids) {
+    try {
+      const r = await fetch(`${API}/tasks/${encodeURIComponent(id)}?customFields=${cfParam}`, { method: 'PUT', headers: auth })
+      const j = await r.json().catch(() => null)
+      if (r.status >= 400) { results.push({ id, error: (j && j.errorDescription) || ('HTTP ' + r.status) }); continue }
+      results.push({ id, ok: true })
+    } catch (e) { results.push({ id, error: String((e && e.message) || e) }) }
+  }
+  return { value: String(value), results }
+}
+
 export default async function handler(req, res) {
   const auth = checkAuth(req.headers['x-access-key'])
   if (!auth.ok) { res.status(auth.code).json({ error: auth.error }); return }
   const token = process.env.WRIKE_TOKEN
   if (!token) { res.status(500).json({ error: 'WRIKE_TOKEN env var not set' }); return }
+  if (req.method === 'POST') {
+    try {
+      const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {})
+      if (body.op !== 'setVE') { res.status(400).json({ error: 'unknown op' }); return }
+      const ids = Array.isArray(body.ids) ? body.ids.map(String).filter(Boolean) : []
+      if (!ids.length) { res.status(400).json({ error: 'ids required' }); return }
+      if (body.value === undefined || body.value === null || body.value === '') { res.status(400).json({ error: 'value required' }); return }
+      res.status(200).json(await setVendorEstimate(token, ids, body.value)); return
+    } catch (e) { res.status(500).json({ error: String((e && e.message) || e) }); return }
+  }
   const lookback = Number(process.env.LOOKBACK_DAYS || '30')
   try {
     const data = await buildCards(token, lookback)

@@ -963,7 +963,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
         .then(cjson).then(function(tr){
           d.translate=tr.tasks||[]; d.newIter=0; d.taskedCount=srcCount; d.phase='translate';
           (d.translate||[]).forEach(function(t){ if(t.taskId!=null) progressMap[t.taskId]=t.percent; });
-          if(d.proofDesired===undefined||d.proofDesired===null) d.proofDesired=confirm('Create corresponding proofreading tasks too?\n\n(They are created when you mark translation done — Crowdin needs translations to exist first.)');
+          if(!(d.proof||[]).some(function(pt){return pt.taskId;})) d.proofDesired=confirm('Create corresponding proofreading tasks too?\n\n(They are created when you mark translation done — Crowdin needs translations to exist first.)');
           saveCrtasks(c.id,d); expandedTasks[c.id]=true; render();
           var made=d.translate.filter(function(t){return t.taskId&&!t.skipped;}).length, sk=d.translate.filter(function(t){return t.skipped;}).length, er=d.translate.filter(function(t){return t.error;}).length;
           toast('Created '+made+' translation task(s)'+(sk?', '+sk+' already existed':'')+(er?', '+er+' failed':'')+'.'); if(b) b.disabled=false;
@@ -971,60 +971,25 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
         }).catch(function(err){ toast('Create tasks failed: '+esc(String(err.message||err))); if(b) b.disabled=false; });
       return;
     }
-    var added=srcCount-tasked;
-    if(added<=0){
-      // No new strings — but tasks may have been deleted in Crowdin. Replay the recorded task titles
-      // (first run = card title; batches carry their label) so any deleted ones are recreated. The
-      // server skips tasks that still exist (dedupe by file+lang+title+type), so no duplicates.
-      var groups={};
-      (d.translate||[]).forEach(function(t){
-        if(!t.code) return;
-        var batch=t.batch||null, title=batch?(batch+' in '+c.title):c.title;
-        var g=groups[title]||(groups[title]={batch:batch, codes:{}});
-        g.codes[String(t.code).toUpperCase()]=t.code;
-      });
-      var titles=Object.keys(groups);
-      if(!titles.length){ toast('No tasks recorded for <b>'+esc(c.ticket)+'</b> yet.'); if(b) b.disabled=false; return; }
-      toast('Recreating any deleted tasks for <b>'+esc(c.ticket)+'</b>…', 9000);
-      Promise.all(titles.map(function(title){
-        var g=groups[title], codes=Object.keys(g.codes).map(function(u){return g.codes[u];});
-        return fetch('/api/crowdin-tasks', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ fileId:d.fileId, title:title, codes:codes, type:0, skipAssigned:true }) })
-          .then(cjson).then(function(tr){ return { batch:g.batch, tasks:tr.tasks||[] }; });
-      })).then(function(res){
-        var recreatedTasks=[];
-        res.forEach(function(g){ (g.tasks||[]).forEach(function(t){
-          if(!(t.taskId && !t.skipped && !t.error)) return;   // 'exists' → still there, skip
-          var U=String(t.code).toUpperCase();
-          var ex=(d.translate||[]).filter(function(x){ return String(x.code).toUpperCase()===U && (x.batch||null)===(g.batch||null); })[0];
-          if(ex){ ex.taskId=t.taskId; ex.url=t.url; ex.percent=t.percent; ex.alphaId=null; recreatedTasks.push(ex); }   // refresh entry; clear alpha so it's remade
-          else { t.batch=g.batch||undefined; t.alphaId=null; d.translate.push(t); recreatedTasks.push(t); }
-          if(t.taskId!=null) progressMap[t.taskId]=t.percent;
-        }); });
-        saveCrtasks(c.id,d); expandedTasks[c.id]=true; render();
-        if(recreatedTasks.length){
-          toast('Recreated '+recreatedTasks.length+' deleted task(s) for <b>'+esc(c.ticket)+'</b> — creating alphas…');
-          createAlphasForTasks(c, recreatedTasks);   // the deleted alphas go with them
-        } else {
-          toast('Nothing to recreate for <b>'+esc(c.ticket)+'</b> — every task still exists. (Run Create file after adding rows to pick up new strings.)');
-        }
-        if(b) b.disabled=false;
-      }).catch(function(err){ toast('Recreate failed: '+esc(String(err.message||err))); if(b) b.disabled=false; });
-      return;
-    }
-    d.newIter=(d.newIter||0)+1;
-    var label=(d.newIter===1)?'New strings':('#'+d.newIter+' New strings');
+    // Every run after the first is a "New strings in …" batch (then "#2 New strings in …", etc.).
+    // skipAssignedStrings means only strings not already covered by a task get tasked — so this one
+    // path handles both newly-added rows AND tasks that were deleted in Crowdin. Languages whose
+    // strings are all still tasked have nothing to do and come back as errors (ignored).
+    var iter=(d.newIter||0)+1;
+    var label=(iter===1)?'New strings':('#'+iter+' New strings');
     var title=label+' in '+c.title;
-    toast('Creating tasks for '+added+' new string(s) in <b>'+esc(c.ticket)+'</b>…', 9000);
+    toast('Creating "'+esc(label)+'" tasks for <b>'+esc(c.ticket)+'</b>…', 9000);
     fetch('/api/crowdin-tasks', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ fileId:d.fileId, title:title, codes:c.languages||[], type:0, skipAssigned:true }) })
       .then(cjson).then(function(tr){
-        (tr.tasks||[]).forEach(function(t){ t.batch=label; if(t.taskId!=null) progressMap[t.taskId]=t.percent; });
-        d.translate=(d.translate||[]).concat(tr.tasks||[]); d.taskedCount=srcCount;
-        if(d.proofDesired===undefined||d.proofDesired===null) d.proofDesired=confirm('Create corresponding proofreading tasks too?\n\n(They are created when you mark translation done — Crowdin needs translations to exist first.)');
+        var made=(tr.tasks||[]).filter(function(t){return t.taskId&&!t.skipped&&!t.error;});
+        if(!made.length){ toast('Nothing to create for <b>'+esc(c.ticket)+'</b> — every string is already tasked. (Run Create file after adding rows.)'); if(b) b.disabled=false; return; }
+        made.forEach(function(t){ t.batch=label; t.alphaId=null; if(t.taskId!=null) progressMap[t.taskId]=t.percent; });
+        d.translate=(d.translate||[]).concat(made); d.taskedCount=srcCount; d.newIter=iter;
+        if(!(d.proof||[]).some(function(pt){return pt.taskId;})) d.proofDesired=confirm('Create corresponding proofreading tasks too?\n\n(They are created when you mark translation done — Crowdin needs translations to exist first.)');
         saveCrtasks(c.id,d); expandedTasks[c.id]=true; render();
-        var made=(tr.tasks||[]).filter(function(t){return t.taskId&&!t.skipped;}).length, sk=(tr.tasks||[]).filter(function(t){return t.skipped;}).length, er=(tr.tasks||[]).filter(function(t){return t.error;}).length;
-        toast('Created '+made+' task(s) — '+esc(label)+' in <b>'+esc(c.ticket)+'</b>'+(sk?', '+sk+' already existed':'')+(er?', '+er+' failed':'')+'.'); if(b) b.disabled=false;
-        createAlphasForTasks(c, tr.tasks);
-      }).catch(function(err){ d.newIter--; toast('New-strings tasks failed: '+esc(String(err.message||err))); if(b) b.disabled=false; });
+        toast('Created '+made.length+' task(s) — '+esc(label)+' in <b>'+esc(c.ticket)+'</b> — creating alphas…'); if(b) b.disabled=false;
+        createAlphasForTasks(c, made);
+      }).catch(function(err){ toast('New-strings tasks failed: '+esc(String(err.message||err))); if(b) b.disabled=false; });
   }
   // Per-card "Automate" modal — houses the Sheet/Import + Crowdin actions in one place.
   function openAutomate(id){

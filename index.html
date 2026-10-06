@@ -124,6 +124,11 @@ td.langs{max-width:260px;font-family:var(--mono);font-size:11.5px;color:var(--mu
 .ling-foot{display:flex;justify-content:flex-end;padding-top:12px;position:sticky;bottom:0;background:var(--surface);}
 .ling-save{background:var(--link);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-weight:600;cursor:pointer;}
 .ling-save:hover{filter:brightness(1.05);}
+.lingmiss-note{font-size:12px;color:var(--muted);margin:0 0 12px;line-height:1.5;}
+.lingmiss-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.lingmiss-lang{font-weight:700;min-width:70px;color:var(--ink);font-size:13px;font-family:var(--mono);}
+.lingmiss-inp{flex:1;padding:8px 10px;border:1px solid var(--hair);border-radius:7px;font:inherit;font-size:12px;color:var(--ink);background:var(--surface);}
+.lingmiss-inp:focus{outline:none;border-color:var(--link);}
 .msgitem{padding:12px 0;border-bottom:1px solid var(--hair2);}
 .msgitem:last-child{border-bottom:none;}
 .msgmeta{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:5px;}
@@ -441,6 +446,15 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     <div class="modal-body">
       <div id="lingBody"></div>
       <div class="ling-foot"><button id="lingSave" class="ling-save">Save</button></div>
+    </div>
+  </div>
+</div>
+<div class="modal" id="lingmisspop" style="display:none">
+  <div class="modal-card">
+    <div class="modal-head"><b id="lingmissTitle">Missing linguists</b><button class="modal-x" id="lingmissClose" title="Close">✕</button></div>
+    <div class="modal-body">
+      <div id="lingmissBody"></div>
+      <div class="ling-foot"><button id="lingmissSave" class="ling-save">Save &amp; create alphas</button></div>
     </div>
   </div>
 </div>
@@ -1206,10 +1220,45 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
         var msg='Created '+ok+' '+esc(stage)+' alpha(s)'+(sk?', '+sk+' skipped (no linguist)':'')+(er.length?', '+er.length+' failed':'')+' in Alconost.';
         if(er.length){ msg+=' ('+esc(String(er[0].error).slice(0,140))+')'; }
         toast(msg);
+        // any skipped for a missing linguist → prompt to enter them, then auto-create those alphas
+        var miss=pend.filter(function(t){ var r=byCode[String(t.code).toUpperCase()]; return r && r.skipped==='no-linguist'; });
+        if(miss.length) promptMissingLinguists(c, miss, stage);
       })
       .catch(function(err){ toast('Alpha creation failed: '+esc(String(err.message||err))); });
     });
   }
+  // When alphas were skipped for a missing linguist: prompt for the execIds, save them to the
+  // shared table, then create the alphas for just those tasks.
+  var missCtx=null;
+  function promptMissingLinguists(c, tasks, stage){
+    missCtx={ c:c, tasks:tasks, stage:stage };
+    var rows=tasks.map(function(t){
+      var code=String(t.code||t.langId||'?'), U=code.toUpperCase();
+      var cur=(linguists[U]||{})[stage]||'';
+      return '<div class="lingmiss-row"><span class="lingmiss-lang">'+esc(code)+'</span>'
+        +'<input class="lingmiss-inp" data-code="'+esc(U)+'" value="'+esc(cur)+'" placeholder="translator id (execId)"/></div>';
+    }).join('');
+    document.getElementById('lingmissTitle').textContent = c.ticket+' — '+stage+' linguists needed';
+    document.getElementById('lingmissBody').innerHTML='<p class="lingmiss-note">These languages have no <b>'+esc(stage)+'</b> linguist set. Enter the translator id (execId) for each, then the alphas will be created.</p>'+rows;
+    document.getElementById('lingmisspop').style.display='flex';
+    var f=document.querySelector('#lingmissBody .lingmiss-inp'); if(f) f.focus();
+  }
+  function closeLingMiss(){ document.getElementById('lingmisspop').style.display='none'; missCtx=null; }
+  document.getElementById('lingmissClose').addEventListener('click', closeLingMiss);
+  document.getElementById('lingmisspop').addEventListener('click', function(e){ if(e.target===this) closeLingMiss(); });
+  document.getElementById('lingmissSave').addEventListener('click', function(){
+    if(!missCtx) return;
+    var c=missCtx.c, tasks=missCtx.tasks, stage=missCtx.stage, changed=false, allFilled=true;
+    document.querySelectorAll('#lingmissBody .lingmiss-inp').forEach(function(inp){
+      var code=inp.getAttribute('data-code'), v=(inp.value||'').trim();
+      if(v){ if(!linguists[code]) linguists[code]={}; linguists[code][stage]=v; changed=true; }
+      else allFilled=false;
+    });
+    if(changed) syncWrite({ kind:'linguists', id:'map', val:JSON.stringify(linguists) });   // shared
+    if(!allFilled){ toast('Enter a linguist for every language first.'); return; }
+    closeLingMiss();
+    createAlphasForTasks(c, tasks, stage);   // retry — execIds are now present
+  });
   function fetchTaskProgress(c){
     var d=crtasksMap[c.id]; if(!d) return;
     var list = (d.phase==='proof') ? (d.proof||[]) : (d.translate||[]);

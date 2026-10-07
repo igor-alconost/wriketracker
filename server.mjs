@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url'
 import { refreshData, readToken } from './refresh.mjs'
 import { buildCards, checkAuth, setVendorEstimate } from './api/wrike-cards.js'
 import { upsertCrowdinFile, readCrowdinToken } from './api/crowdin-file.js'
-import { createTasks } from './api/crowdin-tasks.js'
+import { createTasks, removeApprovals } from './api/crowdin-tasks.js'
 import { taskProgress } from './api/crowdin-progress.js'
 import { fetchTranslations } from './api/crowdin-translations.js'
 import { listTabs, readSource } from './api/sheet-tabs.js'
@@ -90,7 +90,9 @@ http
           const token = readCrowdinToken()
           if (!token) { res.writeHead(500, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'Crowdin token not set' })); return }
           let out
-          if (url.pathname === '/api/crowdin-tasks') out = { tasks: await createTasks(token, { fileId: body.fileId, title: String(body.title || ''), codes: body.codes || [], type: body.type === 1 ? 1 : 0, skipAssigned: !!body.skipAssigned }) }
+          if (url.pathname === '/api/crowdin-tasks') out = (body.op === 'unapprove')
+            ? { results: await removeApprovals(token, { fileId: body.fileId, codes: body.codes || [] }) }
+            : { tasks: await createTasks(token, { fileId: body.fileId, title: String(body.title || ''), codes: body.codes || [], type: body.type === 1 ? 1 : 0, skipAssigned: !!body.skipAssigned }) }
           else if (url.pathname === '/api/crowdin-translations') out = await fetchTranslations(token, Number(body.fileId), body.codes || [])
           else if (url.pathname === '/api/sheet-tabs') out = (body.op === 'readSource') ? await readSource(String(body.url || ''), body.id, body.tab) : await listTabs(String(body.url || ''), body.ids || [])
           else if (url.pathname === '/api/crowdin-scan') out = Array.isArray(body.tickets) ? await scanIndex(token, body.tickets) : await scanFile(token, String(body.ticket || ''), body.codes || [])

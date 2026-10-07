@@ -62,6 +62,32 @@ export async function createTasks(token, { fileId, title, codes, type, skipAssig
   return results.filter(Boolean)
 }
 
+// Remove all approvals on a file for the given languages — used when a proofread task can't be
+// created because every string is already approved ("Language has no unapproved words").
+export async function removeApprovals(token, { fileId, codes }) {
+  const auth = { Authorization: 'Bearer ' + token }
+  const out = []
+  for (const code of (codes || [])) {
+    const langId = toCrowdinLang(code)
+    if (!langId) { out.push({ code, skipped: 'no-target' }); continue }
+    try {
+      const ids = []
+      for (let offset = 0; ; offset += 500) {
+        const r = await fetch(BASE + `/projects/${PROJECT}/approvals?fileId=${Number(fileId)}&languageId=${encodeURIComponent(langId)}&limit=500&offset=${offset}`, { headers: auth })
+        const j = await r.json().catch(() => null)
+        if (r.status >= 400) break
+        const d = (j.data || []).map((x) => x.data)
+        for (const a of d) ids.push(a.id)
+        if (d.length < 500) break
+      }
+      let removed = 0
+      for (const id of ids) { const dr = await fetch(BASE + `/projects/${PROJECT}/approvals/${id}`, { method: 'DELETE', headers: auth }); if (dr.status < 400) removed++ }
+      out.push({ code, langId, removed })
+    } catch (e) { out.push({ code, langId, error: String((e && e.message) || e) }) }
+  }
+  return out
+}
+
 export default async function handler(req, res) {
   const auth = checkAuth(req.headers['x-access-key'])
   if (!auth.ok) { res.status(auth.code).json({ error: auth.error }); return }
@@ -70,6 +96,10 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') { res.status(405).json({ error: 'method not allowed' }); return }
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {})
+    if (body.op === 'unapprove') {
+      if (!body.fileId) { res.status(400).json({ error: 'fileId required' }); return }
+      res.status(200).json({ results: await removeApprovals(token, { fileId: body.fileId, codes: body.codes || [] }) }); return
+    }
     if (!body.fileId || !body.title) { res.status(400).json({ error: 'fileId and title required' }); return }
     const type = body.type === 1 ? 1 : 0
     const tasks = await createTasks(token, { fileId: body.fileId, title: String(body.title), codes: body.codes || [], type, skipAssigned: !!body.skipAssigned })

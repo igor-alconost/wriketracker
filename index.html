@@ -299,6 +299,9 @@ tr.detail .tk-refresh:hover{color:var(--ink);border-color:var(--link);}
 .tk-copy{background:var(--surface);border:1px solid var(--hair);border-radius:6px;color:var(--muted);font:inherit;font-size:11px;cursor:pointer;padding:2px 8px;}
 .tk-copy:hover{border-color:var(--link);color:var(--link);}
 .tk-err .tk-msg{color:var(--crit);font-size:11px;}
+.tk-fix{margin-left:auto;background:var(--warn,#c77a16);border:none;color:#fff;border-radius:7px;font:inherit;font-size:11px;font-weight:700;cursor:pointer;padding:4px 10px;white-space:nowrap;}
+.tk-fix:hover{filter:brightness(1.08);}
+.tk-fix:disabled{opacity:.6;cursor:progress;}
 .tk-empty{color:var(--muted);font-size:12px;}
 .tk-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;}
 .tk-done{background:var(--ok);color:#fff;border:none;border-radius:8px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;padding:8px 14px;}
@@ -1323,7 +1326,12 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     var head = proof ? 'Proofreading tasks' : 'Translation tasks';
     var rows = list.map(function(t){
       var tag=(t.batch?'<span class="tk-batch">'+esc(t.batch)+'</span>':'')+(t.skipped?'<span class="tk-skip">existing</span>':'');
-      if(t.error) return '<div class="tk-row tk-err"><span class="tk-lang">'+esc(t.code||t.langId||'?')+'</span>'+tag+'<span class="tk-msg">'+esc(t.error)+'</span></div>';
+      if(t.error){
+        // proofread "has no unapproved words" → the translator approved them; offer to un-approve + retry
+        var canFix=proof && /unapprov/i.test(String(t.error));
+        var fix=canFix ? '<button class="tk-fix" data-unapprove="'+esc(c.id)+'" data-code="'+esc(t.code||t.langId||'')+'" title="Remove approvals for this language, then create the proofreading task + alpha">Un-approve &amp; create</button>' : '';
+        return '<div class="tk-row tk-err"><span class="tk-lang">'+esc(t.code||t.langId||'?')+'</span>'+tag+'<span class="tk-msg">'+esc(t.error)+'</span>'+fix+'</div>';
+      }
       var pct=(progressMap[t.taskId]!=null?progressMap[t.taskId]:(t.percent||0));
       return '<div class="tk-row"><span class="tk-lang">'+esc(t.code||t.langId)+'</span>'+tag
         + '<span class="tk-prog"><span class="tk-bar"><span style="width:'+pct+'%"></span></span><span class="tk-pct">'+pct+'%</span></span>'
@@ -1368,7 +1376,31 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     if(ff){ var cf=cards.filter(function(x){return x.id===ff.getAttribute('data-frefresh');})[0]; if(cf) fetchFileProgress(cf); return; }
     var td=e.target.closest('.tk-done[data-tdone]');
     if(td){ var c2=cards.filter(function(x){return x.id===td.getAttribute('data-tdone');})[0]; if(!c2) return; markTranslationDone(c2, td); return; }
+    var uf=e.target.closest('.tk-fix[data-unapprove]');
+    if(uf){ var c3=cards.filter(function(x){return x.id===uf.getAttribute('data-unapprove');})[0]; if(!c3) return; unapproveAndProof(c3, uf.getAttribute('data-code'), uf); return; }
   });
+  // Proofread task failed because every string is already approved → remove approvals for that
+  // language, then (re)create the proofreading task and its alpha.
+  function unapproveAndProof(c, code, btn){
+    var d=crtasksMap[c.id]; if(!d||!d.fileId){ toast('Create the Crowdin file first.'); return; }
+    if(btn) btn.disabled=true;
+    toast('Removing approvals for <b>'+esc(code)+'</b> in '+esc(c.ticket)+'…', 12000);
+    fetch('/api/crowdin-tasks', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ op:'unapprove', fileId:d.fileId, codes:[code] }) })
+      .then(cjson).then(function(r){
+        var removed=((r.results||[])[0]||{}).removed||0;
+        return fetch('/api/crowdin-tasks', { method:'POST', cache:'no-store', headers:cheaders(), body:JSON.stringify({ fileId:d.fileId, title:c.title, codes:[code], type:1 }) })
+          .then(cjson).then(function(pr){ return { removed:removed, tasks:pr.tasks||[] }; });
+      }).then(function(res){
+        var U=String(code).toUpperCase();
+        var nt=(res.tasks||[]).filter(function(t){return t.taskId&&!t.skipped&&!t.error;})[0];
+        d.proof=(d.proof||[]).filter(function(t){ return String(t.code||t.langId||'').toUpperCase()!==U; });   // drop the errored entry
+        if(nt){ nt.alphaId=null; if(nt.taskId!=null) progressMap[nt.taskId]=nt.percent; d.proof.push(nt); }
+        else { var again=(res.tasks||[])[0]; if(again) d.proof.push(again); }   // still errored → show it
+        saveCrtasks(c.id,d); render();
+        if(nt){ toast('Removed '+res.removed+' approval(s) and created the <b>'+esc(code)+'</b> proofreading task — creating alpha…'); createAlphasForTasks(c, [nt], 'proofreading'); }
+        else { toast('Removed '+res.removed+' approval(s), but the <b>'+esc(code)+'</b> task still couldn’t be created.'); }
+      }).catch(function(err){ if(btn) btn.disabled=false; toast('Un-approve/retry failed: '+esc(String(err.message||err))); });
+  }
   // Resolve the Crowdin file id for a card: dashboard tasks → scanned files → on-demand scan.
   function resolveFileId(c){
     var d=crtasksMap[c.id]; if(d&&d.fileId) return Promise.resolve(d.fileId);

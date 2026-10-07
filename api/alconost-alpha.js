@@ -116,9 +116,15 @@ export async function createAlphas(key, items) {
       description: String(it.description || ''), service: SERVICE, source: SOURCE, target, volume: VOLUME, execId, currency: CURRENCY
     }
     if (it.tags) args.tags = String(it.tags)   // space-separated hashtags, e.g. "#MPY-83617 #loc"
-    // Put the amount (EUR; LQA 30, translation 30 or 15+15 with proofreading) in the customer RATE,
-    // not gross — with volume 1 the app derives net total from rate (gross didn't auto-fill net).
-    if (it.gross != null && it.gross !== '') args.rate = String(it.gross)
+    // Amount (EUR; LQA 30, translation 30 or 15+15 with proofreading): the target field is GROSS, and
+    // manual entry in the app cascades to net total — but the API doesn't recalc, so set gross AND the
+    // net fields ourselves so every money field shows the amount.
+    if (it.gross != null && it.gross !== '') {
+      const amt = String(it.gross)
+      args.gross = amt
+      args.netTotal = amt
+      args.netUnique = amt
+    }
     try {
       const d = await call('create_alpha', args)
       const asText = (typeof d === 'string') ? d : JSON.stringify(d || '')

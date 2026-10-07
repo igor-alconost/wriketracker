@@ -116,7 +116,9 @@ export async function createAlphas(key, items) {
       description: String(it.description || ''), service: SERVICE, source: SOURCE, target, volume: VOLUME, execId, currency: CURRENCY
     }
     if (it.tags) args.tags = String(it.tags)   // space-separated hashtags, e.g. "#MPY-83617 #loc"
-    if (it.gross != null && it.gross !== '') args.gross = String(it.gross)   // alpha gross (EUR): LQA 30, translation 30 or 15+15 with proofreading
+    // Put the amount (EUR; LQA 30, translation 30 or 15+15 with proofreading) in the customer RATE,
+    // not gross — with volume 1 the app derives net total from rate (gross didn't auto-fill net).
+    if (it.gross != null && it.gross !== '') args.rate = String(it.gross)
     try {
       const d = await call('create_alpha', args)
       const asText = (typeof d === 'string') ? d : JSON.stringify(d || '')

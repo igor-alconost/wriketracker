@@ -1202,7 +1202,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
   document.getElementById('mgrClose').addEventListener('click', closeMgr);
   document.getElementById('mgrpop').addEventListener('click', function(e){ if(e.target===this) closeMgr(); });
   // Alpha tags: the task's ticket, plus a stage tag (translation→#loc, proofreading→none, lqa→#lqa).
-  function alphaTags(c, stage){ return '#'+String(c.ticket||'').replace(/\s+/g,'')+(stage==='translation'?' #loc':(stage==='lqa'?' #lqa':'')); }
+  function alphaTags(c, stage){ return '#'+String(c.ticket||'').replace(/\s+/g,'')+(stage==='translation'?' #loc':(stage==='proofreading'?' #proof':(stage==='lqa'?' #lqa':''))); }
   // For each freshly-created Crowdin task, create one Alconost alpha. The linguist (execId) is
   // taken from the shared Linguists table (execId per language per stage) and sent per item.
   function createAlphasForTasks(c, tasks, stage){

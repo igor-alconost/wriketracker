@@ -18,6 +18,12 @@ const SERVICE = 'min'
 const SOURCE = 'en'
 const VOLUME = '1'
 const CURRENCY = 'EUR'
+// Quality note per stage (shown in the alpha's quality field).
+const QUALITY = {
+  translation: 'No QA issues, No approval required',
+  proofreading: '100% strings approved, No QA issues',
+  lqa: 'No quality requirement'
+}
 
 // Preferred linguists (execId per language, per stage) live in the shared state store and are
 // edited in the dashboard's "Linguists" table. The client sends the resolved execId per item;
@@ -113,7 +119,8 @@ export async function createAlphas(key, items) {
     if (!execId) { out.push({ code: it.code, target, stage, skipped: 'no-linguist' }); continue }
     const args = {
       customerId: CUSTOMER_ID, projectName: PROJECT_NAME, projectUrl: String(it.url || ''),
-      description: String(it.description || ''), service: SERVICE, source: SOURCE, target, volume: VOLUME, execId, currency: CURRENCY
+      description: String(it.description || ''), service: SERVICE, source: SOURCE, target, volume: VOLUME, execId, currency: CURRENCY,
+      quality: QUALITY[stage] || QUALITY.translation   // per-stage quality note
     }
     if (it.tags) args.tags = String(it.tags)   // space-separated hashtags, e.g. "#MPY-83617 #loc"
     // Amount (EUR; LQA 30, translation 30 or 15+15 with proofreading): the target field is GROSS, and

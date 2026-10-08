@@ -170,6 +170,7 @@ export async function buildCards(token, lookbackDays) {
     for (const s of (byOMP[groupKey] || [])) {
       const tkk = ticket(s.title)
       if (tkk === self || seenTk.has(tkk)) continue
+      if (s.status === 'Cancelled') continue   // cancelled copy-loc tickets don't count as a language
       if (!/copy\s*localization/i.test(s.title)) continue
       if (!(s.responsibleIds || []).includes(ALPHA)) continue   // only copy-loc tickets assigned to Alpha Alconost
       const lang = NORM[titleCode(s.title)] || titleCode(s.title) || ''

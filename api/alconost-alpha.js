@@ -123,21 +123,18 @@ export async function createAlphas(key, items) {
       quality: QUALITY[stage] || QUALITY.translation   // per-stage quality note
     }
     if (it.tags) args.tags = String(it.tags)   // space-separated hashtags, e.g. "#MPY-83617 #loc"
-    // Amount (EUR; LQA 30, translation 30 or 15+15 with proofreading): the target field is GROSS, and
-    // manual entry in the app cascades to net total — but the API doesn't recalc, so set gross AND the
-    // net fields ourselves so every money field shows the amount.
-    if (it.gross != null && it.gross !== '') {
-      const amt = String(it.gross)
-      args.gross = amt
-      args.netTotal = amt
-      args.netUnique = amt
-    }
+    // Amount (EUR; LQA 30, translation 30 or 15+15 with proofreading) → GROSS only. (Setting the net
+    // fields too broke creation for the 'min' service, which doesn't support those repetition fields.)
+    if (it.gross != null && it.gross !== '') args.gross = String(it.gross)
     try {
       const d = await call('create_alpha', args)
       const asText = (typeof d === 'string') ? d : JSON.stringify(d || '')
       if (looksLikeError(asText)) { out.push({ code: it.code, target, stage, execId, error: (typeof d === 'string' ? d : asText).slice(0, 200) }); continue }
       let alphaId = (d && typeof d === 'object' && (d.id || d.alphaId || (d.alpha && d.alpha.id))) || null
       if (!alphaId) { const m = asText.match(/alpha\d+/i); if (m) alphaId = m[0] }
+      // Only count it as created when a real alpha id came back — otherwise the response is some
+      // unrecognised message (e.g. a validation reply) and nothing was actually created.
+      if (!alphaId) { out.push({ code: it.code, target, stage, execId, error: ('no alpha id returned — ' + asText).slice(0, 200) }); continue }
       out.push({ code: it.code, target, stage, execId, alphaId, ok: true })
     } catch (e) {
       out.push({ code: it.code, target, stage, execId, error: String((e && e.message) || e) })

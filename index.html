@@ -1114,7 +1114,10 @@ a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible,th.s
     if(b) b.disabled=true;
     ensureCrowdinLinks(c).then(function(){
     if(b) b.disabled=false;
-    var items=codes.map(function(code){ var lg=(linguists[String(code).toUpperCase()]||{}).lqa||'wes'; return { url:(crowdinLinkFor(c,code)||''), code:code, description:locTitleFor(c,code), stage:'lqa', execId:lg, tags:alphaTags(c,'lqa'), gross:'30' }; });
+    // LQA project URL: per-language Crowdin task/file link, else fall back to the LQA report spreadsheet.
+    var lqaReportUrl=(crtasksMap[c.id]||{}).lqaReport||'';
+    var items=codes.map(function(code){ var lg=(linguists[String(code).toUpperCase()]||{}).lqa||'wes'; return { url:(crowdinLinkFor(c,code)||lqaReportUrl), code:code, description:locTitleFor(c,code), stage:'lqa', execId:lg, tags:alphaTags(c,'lqa'), gross:'30' }; });
+    if(items.some(function(i){ return !i.url; })){ toast('No Crowdin link and no LQA report for <b>'+esc(c.ticket)+'</b> — click <b>Create report</b> first (the alpha URL can’t be empty).', 12000); if(b) b.disabled=false; return; }
     pickManager(function(mgr){
     if(b) b.disabled=true;
     toast('Creating '+items.length+' LQA alpha(s) in Alconost'+(mgr?' as '+esc(mgr):'')+'…', 12000);

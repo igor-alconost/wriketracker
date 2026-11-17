@@ -22,7 +22,7 @@ const CURRENCY = 'EUR'
 const QUALITY = {
   translation: 'No QA issues, No approval required',
   proofreading: '100% strings approved, No QA issues',
-  lqa: 'No quality requirement'
+  lqa: 'No QA issues'
 }
 
 // Preferred linguists (execId per language, per stage) live in the shared state store and are
